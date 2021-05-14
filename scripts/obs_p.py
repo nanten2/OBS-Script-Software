@@ -17,7 +17,7 @@ import ttkwidgets as ttkw
 
 class InitDialog:
     def __init__(self):
-        InitFrame = tk.Frame(root)
+        InitFrame = tk.Frame(root    )
         InitFrame.grid(row=0, column=0, sticky="nsew")
 
         global tl_windows
