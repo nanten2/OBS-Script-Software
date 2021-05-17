@@ -7,12 +7,10 @@ from colour import Color
 from PIL import Image, ImageDraw, ImageFont, ImageTk, ImageEnhance, ImageFilter
 from astropy.io import fits
 from astropy import units as u
-from astropy.utils.data import get_pkg_data_filename
 from astropy.wcs import WCS
-from astropy import wcs
 import pyregion
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
-import ttkwidgets as ttkw
+#import ttkwidgets as ttkw
 
 
 class InitDialog:
