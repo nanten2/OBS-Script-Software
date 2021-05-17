@@ -385,7 +385,7 @@ class Graphic:
                 except KeyError:
                     self.degNow = -(((0.5 * math.pi) - cmath.phase(complex(self.UPos[0] - self.midPos[0], self.midPos[1] - self.UPos[1])) - (2*math.pi)) % (-2*math.pi))
 
-                self.resizeFill = "white"
+                self.resizeFill = ""
 
                 self.Box[self.box_index] = [self.box_id]
 
