@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, simpledialog
 from itertools import chain
 from colour import Color
-from PIL import Image, ImageDraw, ImageFont, ImageTk, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageTk
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS

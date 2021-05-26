@@ -4,11 +4,6 @@ import tkinter as tk
 from tkinter import ttk
 from colour import Color
 from PIL import Image, ImageDraw, ImageTk
-from astropy.io import fits
-from astropy import units as u
-from astropy.wcs import WCS
-import pyregion
-from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
 
 class Graphic:
     def __init__(self, master, Gframe, Sframe):
