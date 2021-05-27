@@ -24,9 +24,11 @@ class Tabs:
 
     def frames_setup(self, notebook, gframe_main, param):
         #self.obs_tab = tk.Frame(notebook, width=465, padx=9, pady=0, bg='#fafafa')
-        self.obs_tab = tk.Frame(notebook, padx=9, pady=0, bg='#fafafa')
+        self.obs_tab1 = tk.Frame(notebook, padx=9, pady=0, bg='#fafafa')
         #self.obs_tab.grid_propagate(False)
-        notebook.add(self.obs_tab, text="OBS")
+        notebook.add(self.obs_tab1, text="OBS")
+        self.obs_tab = tk.Frame(self.obs_tab1, bg='#fafafa')
+        self.obs_tab.grid(row=0, column=0, pady=(0,9))
 
         self.fits_tab = tk.Frame(notebook, padx=0, pady=0)
         #self.fits_tab.grid_propagate(False)
