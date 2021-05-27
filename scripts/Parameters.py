@@ -1,4 +1,23 @@
 class Parameters:
+    """List of parameters.
+
+    Each top-level element is a tk.LabelFrame widget, for which the first element is to be it's Label (str) and the
+    second element is to be a single list of dictionaries for the observational parameters and their respective
+    properties.
+
+    Dict Keys:
+        "name" (str) : Name of the parameter
+        "#" (str) : Description of the parameter
+        "string" (bool) : Status as string literal in the output OBS
+        "no." (int) : Position within each section in the output OBS
+        "grid" (tuple) : .grid coordinates used when the parameters are inserted into the GUI interface
+                         Recommended to be used for either all or none of the parameters in a section
+        "default" : Default entry
+        "values" (list) : Options for tk.OptionMenu dropdown menu widget
+                          First option is default
+        "unit" (str) : Unit suffix in the output OBS
+    """
+
     def __init__(self):
         self.paramlist = []
         self.paramlist.append(["observation_property",[

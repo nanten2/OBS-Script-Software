@@ -10,18 +10,15 @@ class Graphic:
         self.master=master
         self.boxColor, self.regColor = "red", "red"
         self.degChange = 0.
+        self.fits_offset = (0, 0)
         self.Box = []
         self.box_selected,  self.over_object, self.over_selected, self.clicked, self.box_manip, self.box_resize, self.boxDrawn = \
             False, False, False, False, False, False, False
-        self.fits_offset = (0, 0)
 
         Gframe.grid_rowconfigure(0, weight=1)
         Gframe.grid_columnconfigure(0, weight=1)
         self.canvas = tk.Canvas(Gframe, bg="gray", cursor="cross-hair", highlightthickness=0, yscrollincrement=1, xscrollincrement=1)
         self.canvas.grid(row=0, column=0, sticky="nsew")
-        #
-        #self.canvas.config(width=400, height=400)
-        #
         self.vbar = ttk.Scrollbar(Gframe, orient="vertical", command=self.canvas.yview)
         self.vbar.grid(row=0, column=1, rowspan=1, sticky="ns")
         self.hbar = ttk.Scrollbar(Gframe, orient="horizontal", command=self.canvas.xview)
@@ -29,18 +26,13 @@ class Graphic:
 
         Sframe.grid_rowconfigure([0,1], weight=0)
         Sframe.grid_columnconfigure([0], weight=1)
-        #Sframe.grid_propagate(False)
         self.clearButton = ttk.Button(Sframe, text="Clear", state=tk.DISABLED, takefocus=0, command=lambda _=None, mode="select": self.resetBox(_, mode))
         self.clearButton.grid(row=0, column=1, rowspan=2, sticky="nsew")
         self.canvas.bind("<BackSpace>", lambda event, mode="select": self.resetBox(event, mode))
-        self.slidercanvas_1 = tk.Canvas(Sframe, bg="gray", height=10, highlightthickness=0, highlightcolor="black",
-                                        borderwidth=0, relief=tk.GROOVE)
-        self.slidercanvas_2 = tk.Canvas(Sframe, bg="gray", width=200, height=10, highlightthickness=0, highlightcolor="black",
-                                        borderwidth=0, relief=tk.GROOVE)
-
+        self.slidercanvas_1 = tk.Canvas(Sframe, bg="gray", height=10, highlightthickness=0, highlightcolor="black", borderwidth=0, relief=tk.GROOVE)
+        self.slidercanvas_2 = tk.Canvas(Sframe, bg="gray", width=200, height=10, highlightthickness=0, highlightcolor="black", borderwidth=0, relief=tk.GROOVE)
         self.slidercanvas_1.grid(row=0, column=0, rowspan=1, columnspan=1, sticky="ew")
         self.slidercanvas_2.grid(row=1, column=0, rowspan=1, columnspan=1, sticky="ew")
-
         self.slider_temp()
         Sframe.bind("<Configure>", self.slider_temp)
 
@@ -53,9 +45,9 @@ class Graphic:
         self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
 
     def slider_temp(self, *args):
+        """Initialize the box color slider."""
         self.scBg = []
         self.colorSlider([self.slidercanvas_1, self.slidercanvas_2], "red", "pink")
-        #self.fillSlider([self.slidercanvas_1, self.slidercanvas_2])
         for num, s_set in enumerate(((self.slidercanvas_1, ["box","marker"]), (self.slidercanvas_2, ["reg","regmarker"]))):
             s_set[0].bind("<Button-1>",
                           lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
@@ -63,6 +55,7 @@ class Graphic:
                           lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
 
     def colorSlider(self, canvas_list, color1, color2):
+        """Draw the color gradient and slider nob."""
         canvas_list[0].update()
         self.sliderwidth, self.sliderheight = canvas_list[0].winfo_width(), canvas_list[0].winfo_height()
         self.colorGradient = list(Color(color1).range_to(Color(color2), self.sliderwidth))
@@ -77,6 +70,7 @@ class Graphic:
             self.scBg[-1].append(canvas.create_line(1, 0, 1, self.sliderheight, width=2, fill="#444444"))
 
     def sliderNob(self, event, canvas, target, pad):
+        """Determine the color chosen based on the position of the nob."""
         width, height = self.sliderwidth, self.sliderheight
         try:
             if width > event.x > pad:
@@ -100,7 +94,6 @@ class Graphic:
                 self.canvas.itemconfig("resize", fill=temp_color)
         except AttributeError:
             pass
-
 
     def B12_callback(self, event):
         self.canvas.focus_set()
@@ -130,6 +123,12 @@ class Graphic:
             self.setBox(event)
 
     def slider_master(self, vartuple):
+        """Scale and update the FITS image.
+
+        Args:
+            vartuple (tuple) : Contains the variable values for the scaling function to be use in color_func.
+                               c.f. FileEdit.Tabs.slider_callback
+        """
         self.fits_offset = (0, 0)
         self.canvas.focus_set()
         try:
@@ -146,6 +145,7 @@ class Graphic:
             pass
 
     def color_func(self, mode, pixel, lowerb, upperb, pixel_min, pixel_max, gamma, gain, bias_x, bias_y):
+        """Scale the input pixel."""
         f1 = pixel_min
         f4 = pixel_max
         if mode == "　Symmetric":
@@ -180,8 +180,11 @@ class Graphic:
                                                   fill="", width=1, outline=self.boxColor, tag="tempbox")
 
     def setBox(self, _, **kwargs):
-        self.slidercanvas_1.update()
-        print(self.slidercanvas_1.winfo_width())
+        """Initializes box manipulation functions.
+
+        Kwargs:
+            "REG" : Separate initialization for pyregion boxes
+        """
         try:
             self.Box.append([self.canvas.create_polygon(kwargs["REG"], fill="", width=1, outline=self.regColor, tag="newbox")])
             self.box_id = self.canvas.find_withtag("newbox")[0]
@@ -216,7 +219,6 @@ class Graphic:
                 self.resizeFill = ""
 
                 self.Box[self.box_index] = [self.box_id]
-
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.NWPos[0] - 2, self.NWPos[1] - 2, self.NWPos[0] + 2, self.NWPos[1] + 2,
                                             width=1, fill=self.boxColor, outline=self.boxColor, tag=("O", "box", "marker", "marker"+self.id_str)))
@@ -316,6 +318,7 @@ class Graphic:
             pass
 
     def hover_detect(self, event, mode):
+        """Detect cursor status."""
         self.over_selected = False
         if mode == "Enter":
             self.over_object = True
@@ -331,6 +334,7 @@ class Graphic:
             self.cursors(event, "default")
 
     def selectBox(self, event, **kwargs):
+        """Assign special 'selected' state to a clicked box."""
         try:
             if not self.over_selected:
                 try:
@@ -381,6 +385,7 @@ class Graphic:
                 self.canvas.event_generate("<B4-Motion>")
 
     def resetBox(self, _, mode):
+        """Delete 'selected' box."""
         self.canvas.focus_set()
         if mode == "select":
             if self.box_selected:
@@ -409,6 +414,7 @@ class Graphic:
                 pass
 
     def manipulateBox(self, event, mode):
+        """Calculate and redraw box when interactively manipulated."""
         try:
             self.canvas.tag_unbind("all", "<Leave>")
             self.finalPos = self.boxPos
@@ -478,6 +484,7 @@ class Graphic:
             pass
 
     def manipulateVar(self, event, mode1, ref1, ref2, o, a1, a2, a3, a4, phi11, phi12, phi21, phi22, phi31, phi32, phi41, phi42, r):
+        """Calcaulte final position of box vertices."""
         self.box_resize = True
         self.endPos = (self.canvas.canvasx(event.x), self.canvas.canvasy(event.y))
         if mode1 == "stretch":

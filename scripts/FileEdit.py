@@ -14,6 +14,14 @@ import ttkwidgets as ttkw
 from Graphic import Graphic
 
 class Tabs:
+    """Governs the notebook widget of the GUI interface.
+
+    OBS tab:
+        Contains the observational parameters.
+    FITS tab:
+        Contains the information and tools to do with the opened FITS file.
+    """
+
     def __init__(self, master, notebook, gframe_main, param, *arg):
         self.master = master
         for title in arg:
@@ -23,15 +31,13 @@ class Tabs:
             self.grph = Graphic(master, self.Frames[5], self.Frames[4])
 
     def frames_setup(self, notebook, gframe_main, param):
-        #self.obs_tab = tk.Frame(notebook, width=465, padx=9, pady=0, bg='#fafafa')
+        """Create the necessary tk.Frame widgets."""
         self.obs_tab1 = tk.Frame(notebook, padx=9, pady=0, bg='#fafafa')
-        #self.obs_tab.grid_propagate(False)
         notebook.add(self.obs_tab1, text="OBS")
         self.obs_tab = tk.Frame(self.obs_tab1, bg='#fafafa')
         self.obs_tab.grid(row=0, column=0, pady=(0,9))
 
         self.fits_tab = tk.Frame(notebook, padx=0, pady=0)
-        #self.fits_tab.grid_propagate(False)
         notebook.add(self.fits_tab, text="FITS", state="hidden")
 
         self.Frames = []
@@ -56,12 +62,14 @@ class Tabs:
         self.Frames[6].grid(row=0, column=0, sticky="nsew")
 
     def fill_obs_tab(self, frames, param):
+        """Populate the OBS tab with the defined observational parameters."""
         font="Calibri 9"
         self.entry_list = []
         for i in range(len(param)):
             self.entry_list.append([[],[],[]])
         self.label_list = []
         for frame, frame_act in enumerate(frames):
+            # These binds allow more intuitive defocusing of the entry boxes
             frame_act.bind("<Button-1>", lambda event: self.master.focus_set())
             frame_act.bind("<Visibility>", lambda event: self.master.focus_set())
             if frame < 4:
@@ -92,6 +100,7 @@ class Tabs:
                         self.entry_list[frame][2][i].grid(row=i, column=1, sticky="ew")
 
     def fill_fits_tab(self, notebook, Tframe):
+        """Populate the FITS tab."""
         notebook.tab(1, state="normal")
         Tframe.grid_propagate(True)
         Tframe.grid_columnconfigure([1], weight=5)
@@ -153,11 +162,13 @@ class Tabs:
         self.upperb_scale.grid(row=5, column=1, columnspan=2, sticky="ew")
 
     def slider_callback(self, *args):
+        """Pass the scaling function's variable values to Graphic.slider_master"""
         self.vartuple = (self.cmode.get(), self.grph.fitsNp_ori, self.fits_lowerb.get(), self.fits_upperb.get(), np.min(self.grph.fitsNp_ori), np.max(self.grph.fitsNp_ori),
                          self.fits_gamma.get(), self.fits_gain.get(), self.fits_biasx.get(), self.fits_biasy.get())
         self.grph.slider_master(self.vartuple)
 
 class Files:
+    """Create the application dropdown bar and link the Tabs objects to the Graphic objects."""
     def __init__(self, master, notebook, gframe_main, tabslist, param, **kwargs):
         self.master = master
         self.file_menu = tk.Menu(master)
@@ -358,6 +369,7 @@ class Files:
         return xy.real + xmid + self.reg_offset[0], xy.imag + ymid + self.reg_offset[1]
 
     def offpos_callback(self):
+        """Determine the frame and position index of the off position parameter."""
         self.offabs_index = [(frame, position)
                             for frame, framelist in enumerate(self.current_tab.entry_list)
                             for position in range(len(framelist[0]))
@@ -368,6 +380,12 @@ class Files:
                             if self.current_tab.entry_list[frame][0][position] == "lambdel_off"][0]
 
     def currentCoords_update(self, _, tabslist, notebook, forangle=False, SD=False):
+        """Update the parameters as the box object of Graphic changes.
+
+        Keyword Args:
+            forangle (bool) : Limit the update to the position angle and those related to it
+            SD (bool) : Limit the update to changes due to the scan_direction parameter
+        """
         self.tracers_disable()
 
         self.current_tab = tabslist[1]
@@ -469,6 +487,7 @@ class Files:
         self.tracers_init()
 
     def setup_cCu(self, tabslist, notebook):
+        """Search for necessary indices of the paramaters, set their initial states, and bind for currentCoords_update."""
         self.notebook_num =  1
         self.current_tab = tabslist[1]
         self.angle_index = [(frame, position)
@@ -720,6 +739,7 @@ class Files:
         self.current_tab.entry_list[self.Nspacing_index[0]][1][self.Nspacing_index[1]].set(math.ceil(start_sc.separation(end_sc).arcsec/scan_spacing))
 
     def close_tl(self, tl_id):
+        """Same as MainApp.close_tl"""
         tl_windows.remove(tl_id)
         tl_id.destroy()
         if len(tl_windows) == 0:
