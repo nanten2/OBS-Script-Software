@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+import Gvars
 from FileEdit import Tabs, Files
 from Parameters import Parameters
 
@@ -13,22 +14,21 @@ class InitDialog:
         Global variable:
             tl_windows : Keeps track of the number of top-level windows
         """
-        self.root = root
-        InitFrame = tk.Frame(self.root)
+        #self.root = root
+        InitFrame = tk.Frame(Gvars.root)
         InitFrame.grid(row=0, column=0, sticky="nsew")
 
-        global tl_windows
-        tl_windows = []
+        Gvars.tlwind_init()
 
         self.newButton = ttk.Button(InitFrame, text="New", takefocus=0, command=self.init_new)
         self.newButton.grid(row=0, column=0, sticky="nsew")
 
     def init_new(self):
         """Create an instance of MainApplication."""
-        tl_windows.append(tk.Toplevel(self.root))
-        tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=tl_windows[-1]: self.close_tl(tl_id))
-        MainApplication(tl_windows[-1], "Untitled.obs", first=True)
-        self.root.withdraw()
+        Gvars.tl_windows.append(tk.Toplevel(Gvars.root))
+        Gvars.tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=Gvars.tl_windows[-1]: self.close_tl(tl_id))
+        MainApplication(Gvars.tl_windows[-1], "Untitled.obs", first=True)
+        Gvars.root.withdraw()
 
     def close_tl(self, tl_id):
         """Remove top-level window objet id from tl_windows. Destroy root if tl_windows is empty.
@@ -36,10 +36,10 @@ class InitDialog:
         Args:
             tl_id : id of the top-level window object
         """
-        tl_windows.remove(tl_id)
+        Gvars.tl_windows.remove(tl_id)
         tl_id.destroy()
-        if len(tl_windows) == 0:
-            self.root.destroy()
+        if len(Gvars.tl_windows) == 0:
+            Gvars.root.destroy()
 
 class MainApplication:
     def __init__(self, master, title, **kwargs):

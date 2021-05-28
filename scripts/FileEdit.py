@@ -11,6 +11,8 @@ import pyregion
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
 import ttkwidgets as ttkw
 
+import Gvars
+import MainApp
 from Graphic import Graphic
 
 class Tabs:
@@ -199,18 +201,18 @@ class Files:
         if not newtab_title.rsplit(".", 1)[-1] == "obs":
             newtab_title += ".obs"
 
-        tl_windows.append(tk.Toplevel(root))
-        tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=tl_windows[-1]: self.close_tl(tl_id))
-        MainApplication(tl_windows[-1], newtab_title, first=True)
+        Gvars.tl_windows.append(tk.Toplevel(Gvars.root))
+        Gvars.tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=Gvars.tl_windows[-1]: self.close_tl(tl_id))
+        MainApp.MainApplication(Gvars.tl_windows[-1], newtab_title, first=True)
 
     def open(self):
         paths_list = filedialog.askopenfilenames(parent=self.master, initialdir=os.getcwd, title='Please select a directory',
                                                  filetypes=[("OBS files", "*.obs")])
         for newtab_path in paths_list:
             newtab_title = newtab_path.rsplit("/", 1)[-1]
-            tl_windows.append(tk.Toplevel(root))
-            tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=tl_windows[-1]: self.close_tl(tl_id))
-            self.new_tl = MainApplication(tl_windows[-1], newtab_title)
+            Gvars.tl_windows.append(tk.Toplevel(Gvars.root))
+            Gvars.tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=Gvars.tl_windows[-1]: self.close_tl(tl_id))
+            self.new_tl = MainApp.MainApplication(Gvars.tl_windows[-1], newtab_title)
 
             tabslist = self.new_tl.tabsList
             param = self.new_tl.param.paramlist
@@ -740,7 +742,7 @@ class Files:
 
     def close_tl(self, tl_id):
         """Same as MainApp.close_tl"""
-        tl_windows.remove(tl_id)
+        Gvars.tl_windows.remove(tl_id)
         tl_id.destroy()
-        if len(tl_windows) == 0:
-            root.destroy()
+        if len(Gvars.tl_windows) == 0:
+            Gvars.root.destroy()

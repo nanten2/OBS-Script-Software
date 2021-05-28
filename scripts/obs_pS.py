@@ -1,7 +1,7 @@
-import tkinter as tk
 import MainApp
+import Gvars
 
 if __name__ == '__main__':
-    root = tk.Tk()
-    initdialog = MainApp.InitDialog(root)
-    root.mainloop()
+    Gvars.tkroot_init()
+    initdialog = MainApp.InitDialog(Gvars.root)
+    Gvars.root.mainloop()
