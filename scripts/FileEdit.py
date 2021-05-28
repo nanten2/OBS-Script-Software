@@ -467,7 +467,7 @@ class Files:
                 self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set("   "+self.scan_direction[-1])
 
             scan_d = self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].get()
-            if True:
+            if self.current_tab.grph.box_selected:
                 start_sc, turn_sc = self.fits_WSC.pixel_to_world(self.boxPos[0], self.boxPos[1]), self.fits_WSC.pixel_to_world(self.boxPos[2], self.boxPos[3])
                 self.current_tab.entry_list[self.otf_index[0]][1][self.otf_index[1]].set(round(start_sc.separation(turn_sc).arcsec, 1))
                 self.Nspacing_trace_callback()
