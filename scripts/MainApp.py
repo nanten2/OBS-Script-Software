@@ -9,12 +9,7 @@ class InitDialog:
     """Handles the initial menu upon start up."""
 
     def __init__(self, root):
-        """Create a root window as the start up menu.
-
-        Global variable:
-            tl_windows : Keeps track of the number of top-level windows
-        """
-        #self.root = root
+        """Create a root window as the start up menu."""
         InitFrame = tk.Frame(Gvars.root)
         InitFrame.grid(row=0, column=0, sticky="nsew")
 

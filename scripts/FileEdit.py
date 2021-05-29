@@ -1,15 +1,16 @@
 import os, math, cmath
+from itertools import chain
 import numpy as np
+from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk, filedialog, simpledialog
+import ttkwidgets as ttkw
 from itertools import chain
-from PIL import Image, ImageTk
+import pyregion
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS
-import pyregion
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
-import ttkwidgets as ttkw
 
 import Gvars
 import MainApp
