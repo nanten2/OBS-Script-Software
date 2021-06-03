@@ -445,7 +445,7 @@ class Files:
                     top_midx, top_midy = (self.boxPos[0] + self.boxPos[2])/2, (self.boxPos[1] + self.boxPos[3])/2
                     bottom_midx, bottom_midy = (self.boxPos[4] + self.boxPos[6])/2, (self.boxPos[5] + self.boxPos[7])/2
                     if (top_midx > bottom_midx and 0 < cur_angle_equator < math.pi) or (top_midx < bottom_midx and cur_angle_equator > math.pi) or \
-                            (round(cur_angle_equator,2) == 0 and top_midy > bottom_midy) or (round(cur_angle_equator,2) == math.pi and top_midy < bottom_midy):
+                            (round(cur_angle_equator,2) == 0 and top_midy > bottom_midy) or (round(cur_angle_equator,2) == round(math.pi,2) and top_midy < bottom_midy):
                         cross_comp = math.pi
                 self.current_tab.entry_list[self.angle_index[0]][1][self.angle_index[1]].set(
                     round(round((cur_angle_equator + self.frame_angle + cross_comp + self.current_tab.grph.degChange)*180/math.pi, 1) % 360, 1))
