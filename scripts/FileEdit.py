@@ -1,5 +1,4 @@
 import os, math, cmath
-from itertools import chain
 import numpy as np
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -7,10 +6,12 @@ from tkinter import ttk, filedialog, simpledialog
 import ttkwidgets as ttkw
 from itertools import chain
 import pyregion
-from astropy.io import fits
+
 from astropy import units as u
-from astropy.wcs import WCS
+from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
+from astropy.wcs import WCS, Wcsprm
+from astropy.wcs._wcs import InvalidTransformError
 
 import Gvars
 import MainApp
@@ -288,14 +289,38 @@ class Files:
             parent=self.master, initialdir=os.getcwd, title='Open FITS...', filetypes=[("FITS files", "*.fits")])
         if not self.temp_path == "":
             tabslist[self.notebook_num].grph.FITSpath = self.temp_path[0]
-        self.fits_WSC = WCS(fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header)
+
         try:
-            self.fits_sys = fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["RADESYS"].lower()
-        except KeyError:
-            self.fits_sys = fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["CTYPE"]
+            self.fits_WSC = WCS(fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header)
+        except InvalidTransformError:
+            self.fits_WSC = WCS(fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header, translate_units='s', naxis=2)
+            ##test
+            print(self.fits_WSC)
+            print(fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["NAXIS"])
+            ##
+
+        kw_list = ["RADESYS", "CTYPE1", "CTYPE"]
+        found_keyword = False
+        for kw in kw_list:
+            try:
+                if not found_keyword:
+                    self.fits_sys = fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header[kw].lower()
+                    found_keyword = True
+                    print(self.fits_sys)
+            except KeyError:
+                print("No Keyword:", kw)
+        if self.fits_sys in ["ra--tan"]:
+            self.fits_sys = "fk5"
+        #try:
+        #    self.fits_sys = fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["RADESYS"].lower()
+        #except KeyError:
+        #    self.fits_sys = fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["CTYPE"]
+
         if self.fits_sys == "fk4":
             self.fits_sys = FK4(equinox="B1950")
         self.img_array = fits.getdata(tabslist[self.notebook_num].grph.FITSpath, ext=0)
+        for i in range(fits.open(tabslist[self.notebook_num].grph.FITSpath)[0].header["NAXIS"] - 2):
+            [self.img_array] = self.img_array.copy()
         tabslist[self.notebook_num].grph.fitsNp_ori = self.img_array
 
         if self.img_array.dtype.name == "int16":
@@ -304,12 +329,14 @@ class Files:
         elif self.img_array.dtype.name == "float32":
             self.img_array = (self.img_array / np.max(self.img_array) + 0.000001) * 255
 
+        self.fits_OriSize = self.img_array.shape
+        tabslist[self.notebook_num].grph.fits_CurSize = self.fits_OriSize
+
         tabslist[self.notebook_num].grph.fitsNp = self.img_array
         tabslist[self.notebook_num].grph.fitsPIL = Image.fromarray(np.flip(self.img_array,0))
         tabslist[self.notebook_num].grph.fitsTk = ImageTk.PhotoImage(tabslist[self.notebook_num].grph.fitsPIL)
         tabslist[self.notebook_num].grph.fitsCanvas = tabslist[self.notebook_num].grph.canvas.create_image(
             tabslist[self.notebook_num].grph.fits_offset, image=tabslist[self.notebook_num].grph.fitsTk, anchor="nw", tag="fits")
-
         tabslist[self.notebook_num].grph.canvas.config(
             xscrollcommand=tabslist[self.notebook_num].grph.hbar.set,
             yscrollcommand=tabslist[self.notebook_num].grph.vbar.set,
@@ -319,9 +346,11 @@ class Files:
         (self.cv_w, self.cv_h, self.im_w, self.im_h) = (
             tabslist[self.notebook_num].grph.canvas.winfo_width()-1, tabslist[self.notebook_num].grph.canvas.winfo_height()-1,
             tabslist[self.notebook_num].grph.fitsPIL.size[0], tabslist[self.notebook_num].grph.fitsPIL.size[1])
+        (tabslist[self.notebook_num].grph.cv_w, tabslist[self.notebook_num].grph.cv_h,
+         tabslist[self.notebook_num].grph.im_w, tabslist[self.notebook_num].grph.im_h) = (
+            self.cv_w, self.cv_h, self.im_w, self.im_h)
         tabslist[self.notebook_num].grph.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2)
         tabslist[self.notebook_num].grph.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2)
-
         tabslist[self.notebook_num].grph.canvas.tag_raise("O")
         tabslist[self.notebook_num].fill_fits_tab(notebook, tabslist[self.notebook_num].Frames[6])
 
@@ -393,22 +422,37 @@ class Files:
 
         self.current_tab = tabslist[1]
         coordsys = self.current_tab.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]].get()
+        ###
+        self.fits_CurSize = self.current_tab.grph.fits_CurSize
+        self.scale_ratio = (self.fits_OriSize[0]/self.fits_CurSize[0], self.fits_OriSize[1]/self.fits_CurSize[1])
+        ###
 
         if self.current_tab.grph.box_selected or forangle:
-            if self.current_tab.grph.box_selected:
-                self.boxPos = self.current_tab.grph.canvas.coords(self.current_tab.grph.box_id)
-                box_degnow = self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][1]
-                box_midx, box_midy = (self.boxPos[0]+self.boxPos[2]+self.boxPos[4]+self.boxPos[6])/4, tabslist[self.notebook_num].grph.fitsNp_ori.shape[0] - 1 - (self.boxPos[1]+self.boxPos[3]+self.boxPos[5]+self.boxPos[7])/4
-                lambet_on = self.fits_WSC.pixel_to_world(box_midx, box_midy)
-                startposx_1 = self.fits_WSC.pixel_to_world(self.boxPos[0], tabslist[self.notebook_num].grph.fitsNp_ori.shape[0] - 1 - self.boxPos[1])
-            elif forangle:
-                lam_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
-                bet_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
-                startx_new = float(self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
-                starty_new = float(self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
-                lambet_on = SkyCoord(lam_new, bet_new, frame=self.obs_sys[-1])
-                startposx_1 = SkyCoord(Angle(lam_new).to(u.arcsec) + startx_new * u.arcsec, Angle(bet_new).to(u.arcsec) + starty_new * u.arcsec, frame=self.obs_sys[-1])
-                box_midx, box_midy = self.fits_WSC.world_to_pixel(lambet_on)
+            try:
+                if self.current_tab.grph.box_selected:
+                    self.boxPos = self.current_tab.grph.canvas.coords(self.current_tab.grph.box_id)
+                    box_degnow = self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][1]
+                    #box_midx, box_midy = (self.boxPos[0]+self.boxPos[2]+self.boxPos[4]+self.boxPos[6])/4, tabslist[self.notebook_num].grph.fitsNp_ori.shape[0] - 1 - (self.boxPos[1]+self.boxPos[3]+self.boxPos[5]+self.boxPos[7])/4
+                    ###
+                    box_midx, box_midy = (self.boxPos[0]+self.boxPos[2]+self.boxPos[4]+self.boxPos[6])*self.scale_ratio[0]/4, \
+                                         (self.fits_CurSize[1] - 1 - (self.boxPos[1]+self.boxPos[3]+self.boxPos[5]+self.boxPos[7])/4)*self.scale_ratio[1]
+                    ###
+                    lambet_on = self.fits_WSC.pixel_to_world(box_midx, box_midy)
+                    startposx_1 = self.fits_WSC.pixel_to_world(self.boxPos[self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][2]]*self.scale_ratio[0],
+                                                               (self.fits_CurSize[1] - 1 - self.boxPos[self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][2]+1])*self.scale_ratio[1])
+                elif forangle:
+                    lam_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
+                    bet_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
+                    startx_new = float(self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
+                    starty_new = float(self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
+                    lambet_on = SkyCoord(lam_new, bet_new, frame=self.obs_sys[-1])
+                    startposx_1 = SkyCoord(Angle(lam_new).to(u.arcsec) + startx_new * u.arcsec, Angle(bet_new).to(u.arcsec) + starty_new * u.arcsec, frame=self.obs_sys[-1])
+                    box_midx, box_midy = self.fits_WSC.world_to_pixel(lambet_on)
+                    ###
+                    box_midx, box_midy = box_midx/self.scale_ratio[0], box_midy/self.scale_ratio[1]
+                    ###
+            except ValueError:
+                return None
 
             if coordsys.lstrip() == "Galactic":
                 lambet_on = lambet_on.transform_to("galactic")
@@ -435,6 +479,9 @@ class Files:
                 self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].set(round(startposx_1.dec.arcsec - lambet_on.dec.arcsec,1))
                 compr_x, compr_y = self.fits_WSC.world_to_pixel(SkyCoord(lambet_on.ra.degree * u.deg, (lambet_on.dec.degree + 1) * u.deg, frame=FK4(equinox="B1950")))
 
+            ###
+            #compr_x, compr_y = compr_x/self.scale_ratio[0], compr_y/self.scale_ratio[1]
+            ###
             compr_x, compr_y = compr_x - box_midx, compr_y - box_midy
             self.frame_angle = np.arctan(compr_x/compr_y)
 
@@ -443,6 +490,8 @@ class Files:
                 cross_comp = 0
                 if self.current_tab.grph.box_resize:
                     top_midx, top_midy = (self.boxPos[0] + self.boxPos[2])/2, (self.boxPos[1] + self.boxPos[3])/2
+                    #top_midx, top_midy = (self.boxPos[0] + self.boxPos[2])*self.scale_ratio[0]/2, (self.boxPos[1] + self.boxPos[3])*self.scale_ratio[1]/2
+                    #bottom_midx, bottom_midy = (self.boxPos[4] + self.boxPos[6])*self.scale_ratio[0]/2, (self.boxPos[5] + self.boxPos[7])*self.scale_ratio[1]/2
                     bottom_midx, bottom_midy = (self.boxPos[4] + self.boxPos[6])/2, (self.boxPos[5] + self.boxPos[7])/2
                     if (top_midx > bottom_midx and 0 < cur_angle_equator < math.pi) or (top_midx < bottom_midx and cur_angle_equator > math.pi) or \
                             (round(cur_angle_equator,2) == 0 and top_midy > bottom_midy) or (round(cur_angle_equator,2) == round(math.pi,2) and top_midy < bottom_midy):
@@ -451,26 +500,19 @@ class Files:
                     round(round((cur_angle_equator + self.frame_angle + cross_comp + self.current_tab.grph.degChange)*180/math.pi, 1) % 360, 1))
 
             if SD or self.current_tab.grph.box_resize:
-                start_corner = complex(self.boxPos[0] - box_midx, box_midy - self.boxPos[1]) \
-                               * cmath.exp(complex(0, -(self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][1] - self.frame_angle)))
-                turn_corner = complex(self.boxPos[2] - box_midx, box_midy - self.boxPos[3]) \
-                               * cmath.exp(complex(0, -(self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][1] - self.frame_angle)))
-                if start_corner.real < turn_corner.real:
-                    if cross_comp == 0:
-                        self.scan_direction.append("right")
-                    else:
-                        self.scan_direction.append("left")
-                else:
-                    if cross_comp == 0:
-                        self.scan_direction.append("left")
-                    else:
-                        self.scan_direction.append("right")
-                self.scan_direction = self.scan_direction[-2:]
-                self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set("   "+self.scan_direction[-1])
+                pass
 
-            scan_d = self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].get()
+            corner = self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][2]
+            dirct = self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][3]
+            if ((corner == 0 or corner == 4) and dirct == 2) or ((corner == 2 or corner == 6) and dirct == -2):
+                self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set("   X")
+            else:
+                self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set("   Y")
+
+            sd_corner = (corner + dirct)%8
             if self.current_tab.grph.box_selected:
-                start_sc, turn_sc = self.fits_WSC.pixel_to_world(self.boxPos[0], self.boxPos[1]), self.fits_WSC.pixel_to_world(self.boxPos[2], self.boxPos[3])
+                start_sc, turn_sc = self.fits_WSC.pixel_to_world(self.boxPos[corner]*self.scale_ratio[0], self.boxPos[corner+1]*self.scale_ratio[1]), \
+                                    self.fits_WSC.pixel_to_world(self.boxPos[sd_corner]*self.scale_ratio[0], self.boxPos[sd_corner+1]*self.scale_ratio[1])
                 self.current_tab.entry_list[self.otf_index[0]][1][self.otf_index[1]].set(round(start_sc.separation(turn_sc).arcsec, 1))
                 self.Nspacing_trace_callback()
 
@@ -537,14 +579,14 @@ class Files:
 
         self.obs_sys = [None]
         self.relative = [0]
-        self.scan_direction = ["right"]
+        self.scan_direction = ["X"]
         self.current_tab.entry_list[self.offabs_index[0]][1][self.offabs_index[1]].set("{}")
         self.current_tab.entry_list[self.offabs_index[0]][1][self.offabs_index[1] + 1].set("{}")
         self.current_tab.entry_list[self.offabs_index[0]][2][self.offabs_index[1]].config(state="disabled")
         self.current_tab.entry_list[self.offabs_index[0]][2][self.offabs_index[1] + 1].config(state="disabled")
         self.current_tab.entry_list[self.otf_index[0]][2][self.otf_index[1]].config(state="disabled")
         self.current_tab.entry_list[self.Nspacing_index[0]][2][self.Nspacing_index[1]].config(state="disabled")
-        self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set(" ")
+        #self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].set(" ")
 
         tabslist[self.notebook_num].grph.canvas.bind("<B1-Motion>",
                     lambda event, tabslist=tabslist, notebook=notebook: self.currentCoords_update(event, tabslist, notebook), add="+")
@@ -552,10 +594,13 @@ class Files:
                     lambda event, tabslist=tabslist, notebook=notebook: self.currentCoords_update(event, tabslist, notebook), add="+")
         tabslist[self.notebook_num].grph.canvas.bind("<B4-Motion>",
                     lambda event, tabslist=tabslist, notebook=notebook: self.currentCoords_update(event, tabslist, notebook, SD=True), add="+")
+        tabslist[self.notebook_num].grph.canvas.bind("<B5-Motion>",
+                    lambda event, disable=False: self.lambet_trace_callback(event, disabletracers=disable), add="+")
+        tabslist[self.notebook_num].grph.canvas.bind("z", lambda event: self.tracers_disable(event))
 
         self.tracers_init()
-        if self.window_from_new:
-            self.coordsys_trace_callback()
+        #if self.window_from_new:
+        #    self.coordsys_trace_callback()
 
     def tracers_init(self):
         self.tracers = []
@@ -573,7 +618,7 @@ class Files:
         for i,var in enumerate(self.tracers):
             self.tracers[i].append(var[0].trace("w", var[1]))
 
-    def tracers_disable(self):
+    def tracers_disable(self, *args):
         try:
             for i,(var,callback,tracer_id) in enumerate(self.tracers):
                 var.trace_vdelete("w", tracer_id)
@@ -669,10 +714,13 @@ class Files:
 
             self.relative_trace_callback(convert=True)
 
-    def lambet_trace_callback(self, *args, **kwargs):
+    def lambet_trace_callback(self, _, disabletracers=False, *args, **kwargs):
         if not self.fits_opened:
             return None
         try:
+            if disabletracers:
+                self.tracers_disable()
+
             lam_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
             bet_new = str(self.current_tab.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
             startx_new = float(self.current_tab.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
@@ -686,7 +734,14 @@ class Files:
 
             midPos_x, midPos_y = self.fits_WSC.world_to_pixel(lambet_new)
             start_x, start_y = self.fits_WSC.world_to_pixel(start_new)
-            y_dim = self.current_tab.grph.fitsNp_ori.shape[0] - 1
+            ###
+            self.fits_CurSize = self.current_tab.grph.fits_CurSize
+            self.scale_ratio = (self.fits_OriSize[0]/self.fits_CurSize[0], self.fits_OriSize[1]/self.fits_CurSize[1])
+            midPos_x, midPos_y = midPos_x/self.scale_ratio[0], midPos_y/self.scale_ratio[1]
+            start_x, start_y = start_x/self.scale_ratio[0], start_y/self.scale_ratio[1]
+            ###
+            #y_dim = self.current_tab.grph.fitsNp_ori.shape[0] - 1
+            y_dim = round((self.current_tab.grph.fitsNp_ori.shape[0] - 1)/self.scale_ratio[1])
 
             if not self.current_tab.grph.boxDrawn:
                 cur_angle = angle
@@ -705,24 +760,50 @@ class Files:
             finalSE = (start_x_new + width_x + height_x, start_y_new + width_y - height_y)
             finalSW = (start_x_new + height_x, start_y_new - height_y)
 
+            oristart_angle = (np.angle(oristart) - math.pi/2) % (2*math.pi)
+            if oristart_angle < math.pi/2:
+                self.current_tab.grph.startxy_c = 0
+                final = (*finalNW, *finalNE, *finalSE, *finalSW)
+            elif oristart_angle < math.pi:
+                self.current_tab.grph.startxy_c = 6
+                final = (*finalSW, *finalSE, *finalNE, *finalNW)
+            elif oristart_angle < 1.5*math.pi:
+                self.current_tab.grph.startxy_c = 4
+                final = (*finalSE, *finalSW, *finalNW, *finalNE)
+            elif oristart_angle < 2*math.pi:
+                self.current_tab.grph.startxy_c = 2
+                final = (*finalNE, *finalNW, *finalSW, *finalSE)
+
             if not self.current_tab.grph.boxDrawn and not self.current_tab.grph.box_selected:
-                self.current_tab.grph.canvas.create_polygon(finalNW[0], y_dim - finalNW[1],
-                                                            finalNE[0], y_dim - finalNE[1],
-                                                            finalSE[0], y_dim - finalSE[1],
-                                                            finalSW[0], y_dim - finalSW[1], fill="", width=1, outline=self.current_tab.grph.boxColor, tag="tempbox")
+                self.current_tab.grph.canvas.create_polygon(final[0], y_dim - final[1],
+                                                            final[2], y_dim - final[3],
+                                                            final[4], y_dim - final[5],
+                                                            final[6], y_dim - final[7], fill="", width=1, outline=self.current_tab.grph.boxColor, tag="tempbox")
+                self.current_tab.grph.set_onpos(None)
                 self.current_tab.grph.setBox(None)
                 self.current_tab.grph.selectBox(None, virtual=True)
             elif not self.current_tab.grph.box_manip and self.current_tab.grph.box_selected and not self.current_tab.grph.clicked:
                 self.current_tab.grph.canvas.coords(self.current_tab.grph.Box[self.current_tab.grph.box_index][0],
-                                                    finalNW[0], y_dim - finalNW[1],
-                                                    finalNE[0], y_dim - finalNE[1],
-                                                    finalSE[0], y_dim - finalSE[1],
-                                                    finalSW[0], y_dim - finalSW[1])
+                                                    final[0], y_dim - final[1],
+                                                    final[2], y_dim - final[3],
+                                                    final[4], y_dim - final[5],
+                                                    final[6], y_dim - final[7])
+                self.current_tab.grph.set_onpos(None, int(self.current_tab.grph.startxy_c/2))
                 self.current_tab.grph.setBox(None)
+
+            if disabletracers:
+                self.tracers_init()
         except ValueError:
             pass
 
     def scanDirection_trace_callback(self, *args):
+        self.scan_direction.append(str(self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].get()).lstrip())
+        self.scan_direction = self.scan_direction[-2:]
+        self.current_tab.grph.scan_direction = self.scan_direction[-1]
+        self.current_tab.grph.set_onpos(None, corner=int(self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][2]/2))
+        self.current_tab.grph.setBox(None)
+
+    def scanDirection_trace_callback2(self, *args):
         self.scan_direction.append(str(self.current_tab.entry_list[self.scanDirection_index[0]][1][self.scanDirection_index[1]].get()).lstrip())
         self.scan_direction = self.scan_direction[-2:]
         if self.current_tab.grph.box_selected:
@@ -739,7 +820,9 @@ class Files:
 
     def Nspacing_trace_callback(self, *args):
         scan_spacing = float(self.current_tab.entry_list[self.Nspacing_index[0]][1][self.Nspacing_index[1]+1].get())
-        start_sc, end_sc = self.fits_WSC.pixel_to_world(self.boxPos[0], self.boxPos[1]), self.fits_WSC.pixel_to_world(self.boxPos[6], self.boxPos[7])
+        corner = self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][2]
+        sd_corner = (corner - self.current_tab.grph.Box[self.current_tab.grph.box_index][-1][3])%8
+        start_sc, end_sc = self.fits_WSC.pixel_to_world(self.boxPos[corner], self.boxPos[corner+1]), self.fits_WSC.pixel_to_world(self.boxPos[sd_corner], self.boxPos[sd_corner+1])
         self.current_tab.entry_list[self.Nspacing_index[0]][1][self.Nspacing_index[1]].set(math.ceil(start_sc.separation(end_sc).arcsec/scan_spacing))
 
     def close_tl(self, tl_id):

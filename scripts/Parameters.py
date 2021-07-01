@@ -40,7 +40,7 @@ class Parameters:
             {"name": "coordsys", "#": "(J2000/b1950/galactic/horizontal)", "string": True, "values": ["J2000", "B1950", "Galactic"], "grid": (0,0), "no.": 12},
         ]])
         self.paramlist.append(["scan_property",[
-            {"name": "scan_direction", "#": "X (=0) or Y (=1) scan", "values": ["right", "left"], "string": True, "grid": (0,0), "no.": 1},
+            {"name": "scan_direction", "#": "X (=0) or Y (=1) scan", "values": ["X", "Y"], "string": True, "grid": (0,0), "no.": 1},
             {"name": "N", "#": "Number of scanlines (integer)", "string": False, "grid": (1,0), "no.": 2},
             {"name": "scan_spacing", "#": "scan spacing (arcsec) (default = 60)", "string": True, "unit": "arcsec", "default": 60, "grid": (2,0), "no.": 3},
             {"name": "otflen", "#": "time duration for 1 scan  (s) ", "string": True, "unit": "s", "grid": (1,1), "no.": 4},

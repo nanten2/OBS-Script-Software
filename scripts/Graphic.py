@@ -10,6 +10,10 @@ class Graphic:
         self.master=master
         self.boxColor, self.regColor = "red", "red"
         self.degChange = 0.
+        self.scan_direction = "X"
+        self.dirct = 2
+        self.startxy_c_de = 0
+        self.startxy_c = self.startxy_c_de
         self.fits_offset = (0, 0)
         self.Box = []
         self.box_selected,  self.over_object, self.over_selected, self.clicked, self.box_manip, self.box_resize, self.boxDrawn = \
@@ -43,6 +47,92 @@ class Graphic:
         self.canvas.bind("<ButtonRelease-2>", self.B2R_callback)
         self.canvas.bind('<MouseWheel>', self.v_scroll)
         self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
+
+        self.canvas.bind("<Command-MouseWheel>", lambda event: self.testzoom(event))
+        self.canvas.bind("<KeyRelease-Meta_L>", lambda event: self.endzoom(event))
+        self.canvas.bind("a", lambda event: self.testpos(event))
+        self.canvas.bind("d", lambda event: self.deletetestpos(event))
+        self.zoom = 1
+
+    def h_scroll(self, event):
+        self.canvas.xview_scroll(-3 * event.delta, 'units')
+
+    def v_scroll(self, event):
+        self.canvas.yview_scroll(-3 * event.delta, 'units')
+
+    def testzoom(self, event):
+        self.canvas.focus_set()
+        px,py = event.widget.winfo_pointerxy()
+        rx,ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
+        cx,cy = (px-rx, py-ry)
+        self.eventx, self.eventy = self.canvas.canvasx(cx),self.canvas.canvasy(cy)
+        print(self.canvas.canvasx(cx),self.canvas.canvasy(cy))
+
+        scale = 1 - np.sign(event.delta)*0.02
+        self.zoom *= scale
+
+        imgx, imgy = self.fitsPIL.size
+        print(imgx, imgy)
+        finalx, finaly = imgx*self.zoom, imgy*self.zoom
+        print(finalx, finaly)
+        fitsPILtemp = self.fitsPIL.resize((int(round(finalx)), int(round(finaly))), Image.NEAREST)
+        self.fitsTk = ImageTk.PhotoImage(fitsPILtemp)
+
+        #fitspos = (self.canvas.canvasx(cx)*(1-scale), self.canvas.canvasy(cy)*(1-scale))
+        self.canvas.delete("fits")
+        self.fitsCanvas = self.canvas.create_image((0,0), image=self.fitsTk, anchor="nw", tag="fits")
+        self.fits_CurSize = (self.fitsTk.width(), self.fitsTk.height())
+        print(self.fits_CurSize)
+
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+        #self.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2-(self.canvas.canvasx(cx)*self.zoom))
+        #self.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2-(self.canvas.canvasy(cy)*self.zoom))
+
+        self.canvas.xview_scroll(int(round(self.eventx*(scale-1))), 'units')
+        self.canvas.yview_scroll(int(round(self.eventy*(scale-1))), 'units')
+
+        self.canvas.tag_lower("fits")
+
+        self.canvas.scale("box",0,0,scale,scale)
+
+    def endzoom(self, *args):
+        if self.box_selected:
+            ori_selected_state = True
+            ori_selected_box_id = self.box_id
+        else:
+            ori_selected_state = False
+        self.box_selected = True
+        for i in range(len(self.Box)):
+            self.box_id = self.Box[i][0]
+            self.setBox(None, generate_B4=False)
+        if ori_selected_state:
+            self.box_id = ori_selected_box_id
+            self.canvas.event_generate("<B5-Motion>")
+        else:
+            self.box_selected = False
+
+
+    def testpos(self, event):
+        px,py = event.widget.winfo_pointerxy()
+        rx,ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
+        cx,cy = (px-rx, py-ry)
+        self.eventx, self.eventy = self.canvas.canvasx(cx),self.canvas.canvasy(cy)
+        print(self.eventx, self.eventy)
+        self.canvas.create_line(5,0,50,0, fill="orange", tag=("testline","box"))
+        a = self.canvas.create_line(5,0.4,100,0.4, fill="pink", tag=("testline","box"))
+        self.canvas.create_line(5,0.6,150,0.6, fill="cyan", tag=("testline","box"))
+        self.canvas.create_line(5,1,200,1, fill="white", tag=("testline","box"))
+        print(self.canvas.coords(a))
+
+
+    def deletetestpos(self, *args):
+        self.canvas.delete("testline")
+        print(self.eventx*self.zoom, self.eventy*self.zoom)
+        self.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2-(self.eventx*(self.zoom-1)))
+        self.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2-(self.eventy*(self.zoom-1)))
+
+
 
     def slider_temp(self, *args):
         """Initialize the box color slider."""
@@ -137,7 +227,8 @@ class Graphic:
             self.temp2 = np.clip(self.temp2, np.min(self.fitsNp_ori), np.max(self.fitsNp_ori))
             self.temp2 = (self.temp2 / np.max(self.fitsNp_ori)) * 255
             self.temp = Image.fromarray(np.flip(self.temp2, 0))
-            self.temp = ImageTk.PhotoImage(self.temp)
+            self.fitsPIL = self.temp
+            self.temp = ImageTk.PhotoImage(self.temp.resize(self.fits_CurSize,Image.NEAREST))
             self.canvas.delete("fits")
             self.canvas.create_image(self.fits_offset, image=self.temp, anchor="nw", tag="fits")
             self.canvas.tag_raise("O")
@@ -161,12 +252,6 @@ class Graphic:
             f23 = lambda pixel: (((pixel-bias_sep_x)/(upperb-lowerb))**gamma)*(pixel_max-pixel_min)*gain + bias_sep_y
             return np.piecewise(pixel, [(pixel<lowerb), (lowerb <= pixel) * (pixel <= upperb), (upperb < pixel)], [f1, f23, f4])
 
-    def v_scroll(self, event):
-        self.canvas.yview_scroll(-3 * event.delta, 'units')
-
-    def h_scroll(self, event):
-        self.canvas.xview_scroll(-3 * event.delta, 'units')
-
     def setStart_draw(self, event):
         self.startPos = (self.canvas.canvasx(event.x), self.canvas.canvasy(event.y))
 
@@ -179,7 +264,7 @@ class Graphic:
         self.tempBox = self.canvas.create_polygon(self.startPos, self.NEPos, self.endPos, self.SWPos,
                                                   fill="", width=1, outline=self.boxColor, tag="tempbox")
 
-    def setBox(self, _, **kwargs):
+    def setBox(self, _, generate_B4=True, **kwargs):
         """Initializes box manipulation functions.
 
         Kwargs:
@@ -200,12 +285,14 @@ class Graphic:
                 self.canvas.itemconfig("newbox", tag=("O", "box"))
                 self.over_selected = False
                 self.boxDrawn = True
+                self.startxy_c = 0
         if True:
             try:
                 self.id_str = str(self.box_id)
                 self.canvas.delete("mid"+self.id_str, "resize"+self.id_str,"marker"+self.id_str,"regmarker"+self.id_str)
 
-                (self.NWPos, self.NEPos, self.SEPos, self.SWPos) = tuple(self.canvas.coords(self.box_id)[i:i + 2] for i in range(0, 8, 2))
+                box_coords = self.canvas.coords(self.box_id)
+                (self.NWPos, self.NEPos, self.SEPos, self.SWPos) = tuple(box_coords[i:i + 2] for i in range(0, 8, 2))
                 self.UPos = ((self.NWPos[0] + self.NEPos[0]) / 2, (self.NWPos[1] + self.NEPos[1]) / 2)
                 self.DPos = ((self.SEPos[0] + self.SWPos[0]) / 2, (self.SEPos[1] + self.SWPos[1]) / 2)
                 self.LPos = ((self.NWPos[0] + self.SWPos[0]) / 2, (self.NWPos[1] + self.SWPos[1]) / 2)
@@ -216,15 +303,17 @@ class Graphic:
                 except KeyError:
                     self.degNow = -(((0.5 * math.pi) - cmath.phase(complex(self.UPos[0] - self.midPos[0], self.midPos[1] - self.UPos[1])) - (2*math.pi)) % (-2*math.pi))
 
-                self.resizeFill = ""
-
                 self.Box[self.box_index] = [self.box_id]
                 self.Box[self.box_index].append(
-                    self.canvas.create_oval(self.NWPos[0] - 2, self.NWPos[1] - 2, self.NWPos[0] + 2, self.NWPos[1] + 2,
+                    self.canvas.create_oval(box_coords[self.startxy_c] - 2, box_coords[self.startxy_c+1] - 2,
+                                            box_coords[self.startxy_c] + 2, box_coords[self.startxy_c+1] + 2,
                                             width=1, fill=self.boxColor, outline=self.boxColor, tag=("O", "box", "marker", "marker"+self.id_str)))
+                small_circle_index_temp = (self.startxy_c+self.dirct)%8
                 self.Box[self.box_index].append(
-                    self.canvas.create_oval(self.NEPos[0] - 1, self.NEPos[1] - 1, self.NEPos[0] + 1, self.NEPos[1] + 1,
+                    self.canvas.create_oval(box_coords[small_circle_index_temp] - 1, box_coords[small_circle_index_temp+1] - 1,
+                                            box_coords[small_circle_index_temp] + 1, box_coords[small_circle_index_temp+1] + 1,
                                             width=1, fill=self.boxColor, outline=self.boxColor, tag=("O", "box", "marker", "marker"+self.id_str)))
+
                 if "reg" in self.canvas.gettags(self.box_id):
                     self.canvas.itemconfig(self.Box[self.box_index][1], fill=self.regColor, outline=self.regColor, tag=("O", "reg", "regmarker", "regmarker"+self.id_str))
                     self.canvas.itemconfig(self.Box[self.box_index][2], fill=self.regColor, outline=self.regColor, tag=("O", "reg", "regmarker", "regmarker"+self.id_str))
@@ -232,18 +321,19 @@ class Graphic:
                     self.canvas.itemconfig(self.Box[self.box_index][1], fill="")
                     self.canvas.itemconfig(self.Box[self.box_index][2], fill="")
 
+                self.resizeFill = ""
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.NWPos[0] - 6, self.NWPos[1] + 5, self.NWPos[0] + 5, self.NWPos[1] - 6,
-                                        width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + self.id_str, "C", "NW")))
+                                        width=0, fill="", tag=("O", "resize", "resize" + self.id_str, "C", "NW")))
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.NEPos[0] - 6, self.NEPos[1] + 5, self.NEPos[0] + 5, self.NEPos[1] - 6,
-                                        width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + self.id_str, "C", "NE")))
+                                        width=0, fill="", tag=("O", "resize", "resize" + self.id_str, "C", "NE")))
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.SEPos[0] - 6, self.SEPos[1] + 5, self.SEPos[0] + 5, self.SEPos[1] - 6,
-                                        width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + self.id_str, "C", "SE")))
+                                        width=0, fill="", tag=("O", "resize", "resize" + self.id_str, "C", "SE")))
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.SWPos[0] - 6, self.SWPos[1] + 5, self.SWPos[0] + 5, self.SWPos[1] - 6,
-                                        width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + self.id_str, "C", "SW")))
+                                        width=0, fill="", tag=("O", "resize", "resize" + self.id_str, "C", "SW")))
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.UPos[0] - 6, self.UPos[1] + 5, self.UPos[0] + 5, self.UPos[1] - 6,
                                         width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + self.id_str, "UD", "U")))
@@ -259,7 +349,7 @@ class Graphic:
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.midPos[0] - 6, self.midPos[1] + 5, self.midPos[0] + 5, self.midPos[1] - 6,
                                         width=0, fill=self.resizeFill, tag=("O", "mid", "mid" + self.id_str)))
-                self.Box[self.box_index].append((self.midPos, self.degNow))
+                self.Box[self.box_index].append([self.midPos, self.degNow, self.startxy_c, self.dirct])
 
                 self.canvas.tag_bind("all", "<Enter>", lambda event, mode="Enter": self.hover_detect(event, mode))
                 self.canvas.tag_bind("all", "<Leave>", lambda event, mode="Leave": self.hover_detect(event, mode))
@@ -289,23 +379,51 @@ class Graphic:
                 self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipulateBox(event, mode))
                 self.canvas.tag_bind("NW", "<B1-Motion>", lambda event, mode=("NW", "free"): self.manipulateBox(event, mode))
                 self.canvas.tag_bind("NW", "<Shift-B1-Motion>", lambda event, mode=("NW", "ratio"): self.manipulateBox(event, mode))
+                self.canvas.tag_bind("NW", "<Double-Button-1>", lambda event, corner=0, manual=True: self.set_onpos(event, corner, manual))
                 self.canvas.tag_bind("NE", "<B1-Motion>", lambda event, mode=("NE", "free"): self.manipulateBox(event, mode))
                 self.canvas.tag_bind("NE", "<Shift-B1-Motion>", lambda event, mode=("NE", "ratio"): self.manipulateBox(event, mode))
-                self.canvas.tag_bind("SW", "<B1-Motion>", lambda event, mode=("SW", "free"): self.manipulateBox(event, mode))
-                self.canvas.tag_bind("SW", "<Shift-B1-Motion>", lambda event, mode=("SW", "ratio"): self.manipulateBox(event, mode))
+                self.canvas.tag_bind("NE", "<Double-Button-1>", lambda event, corner=1, manual=True: self.set_onpos(event, corner, manual))
                 self.canvas.tag_bind("SE", "<B1-Motion>", lambda event, mode=("SE", "free"): self.manipulateBox(event, mode))
                 self.canvas.tag_bind("SE", "<Shift-B1-Motion>", lambda event, mode=("SE", "ratio"): self.manipulateBox(event, mode))
+                self.canvas.tag_bind("SE", "<Double-Button-1>", lambda event, corner=2, manual=True: self.set_onpos(event, corner, manual))
+                self.canvas.tag_bind("SW", "<B1-Motion>", lambda event, mode=("SW", "free"): self.manipulateBox(event, mode))
+                self.canvas.tag_bind("SW", "<Shift-B1-Motion>", lambda event, mode=("SW", "ratio"): self.manipulateBox(event, mode))
+                self.canvas.tag_bind("SW", "<Double-Button-1>", lambda event, corner=3, manual=True: self.set_onpos(event, corner, manual))
 
                 self.canvas.tag_bind("all", "<ButtonRelease-1>", lambda event: self.selectBox(event))
 
+                #
+                #self.canvas.tag_raise(self.Box[self.box_index][1])
+                #
                 self.box_manip, self.box_resize = False, False
                 self.box_index = self.box_index_selected
                 self.box_id = self.Box[self.box_index][0]
                 self.degChange = 0.
-                self.canvas.event_generate("<B4-Motion>")
+                if generate_B4:
+                    self.canvas.event_generate("<B4-Motion>")
                 self.canvas.event_generate("<Enter>")
             except (AttributeError, IndexError):
                 pass
+
+    def set_onpos(self, _, corner, manual=False):
+        if self.box_selected:
+            box_coord = tuple(self.canvas.coords(self.box_id)[i:i + 2] for i in range(0, 8, 2))
+            if self.scan_direction == "X":
+                if corner == 0 or corner == 2:
+                    self.dirct = 2
+                else:
+                    self.dirct = -2
+            else:
+                if corner == 1 or corner == 3:
+                    self.dirct = 2
+                else:
+                    self.dirct = -2
+            (temp1x, temp1y) = box_coord[corner]
+            self.canvas.coords(self.Box[self.box_index][1], temp1x - 2, temp1y - 4, temp1x + 20, temp1y + 4)
+            self.Box[self.box_index][-1][2] = corner*2
+            self.startxy_c = corner*2
+        if manual:
+            self.setBox(None)
 
     def B12_leave(self, event):
         try:
@@ -347,6 +465,7 @@ class Graphic:
                     physical = True
                 self.box_index_selected = self.box_index
                 self.box_id = self.Box[self.box_index][0]
+                self.startxy_c = self.Box[self.box_index][-1][2]
                 if self.over_object and not self.box_manip:
                     self.canvas.tag_raise(self.box_id)
                     self.canvas.tag_raise("marker"+str(self.box_id))
@@ -396,6 +515,7 @@ class Graphic:
                 self.over_selected = False
                 self.clicked = False
                 self.bad_start = False
+                self.startxy_c, self.scan_direction, self.dirct = 0, "X", 2
                 self.clearButton.config(state=tk.DISABLED)
                 for i in range(len(self.Box[self.box_index])):
                     self.canvas.delete(self.Box[self.box_index][i])
@@ -478,8 +598,11 @@ class Graphic:
                         self.endPos[0], self.endPos[1], self.boxPos[6] + self.posChange[2], self.boxPos[7] + self.posChange[3])
 
                 self.canvas.coords(self.box_id, self.finalPos)
-                self.canvas.coords(self.Box[self.box_index][1], self.finalPos[0]-2, self.finalPos[1]-2, self.finalPos[0]+2, self.finalPos[1]+2)
-                self.canvas.coords(self.Box[self.box_index][2], self.finalPos[2]-1, self.finalPos[3]-1, self.finalPos[2]+1, self.finalPos[3]+1)
+                small_circle_index_temp = (self.startxy_c+self.dirct)%8
+                self.canvas.coords(self.Box[self.box_index][1], self.finalPos[self.startxy_c]-2, self.finalPos[self.startxy_c+1]-2,
+                                                                self.finalPos[self.startxy_c]+2, self.finalPos[self.startxy_c+1]+2)
+                self.canvas.coords(self.Box[self.box_index][2], self.finalPos[small_circle_index_temp]-1, self.finalPos[small_circle_index_temp+1]-1,
+                                                                self.finalPos[small_circle_index_temp]+1, self.finalPos[small_circle_index_temp+1]+1)
         except AttributeError:
             pass
 
