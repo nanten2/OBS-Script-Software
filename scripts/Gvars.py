@@ -6,5 +6,6 @@ def tlwind_init():
     tl_windows = []
 
 def tkroot_init():
+    """Create Tkinter root"""
     global root
     root = tk.Tk()

@@ -76,6 +76,7 @@ class Tabs:
             # These binds allow more intuitive defocusing of the entry boxes
             frame_act.bind("<Button-1>", lambda event: self.master.focus_set())
             frame_act.bind("<Visibility>", lambda event: self.master.focus_set())
+
             if frame < 4:
                 for i in range(len(param[frame][1])):
                     self.entry_list[frame][0].append(param[frame][1][i]["name"])
@@ -329,14 +330,21 @@ class Files:
         elif self.img_array.dtype.name == "float32":
             self.img_array = (self.img_array / np.max(self.img_array) + 0.000001) * 255
 
-        self.fits_OriSize = self.img_array.shape
+        self.fits_OriSize = self.img_array.shape[::-1]
+        tabslist[self.notebook_num].grph.fits_OriSize = self.fits_OriSize
         tabslist[self.notebook_num].grph.fits_CurSize = self.fits_OriSize
+        print("cursize:",tabslist[self.notebook_num].grph.fits_CurSize)
 
         tabslist[self.notebook_num].grph.fitsNp = self.img_array
-        tabslist[self.notebook_num].grph.fitsPIL = Image.fromarray(np.flip(self.img_array,0))
-        tabslist[self.notebook_num].grph.fitsTk = ImageTk.PhotoImage(tabslist[self.notebook_num].grph.fitsPIL)
-        tabslist[self.notebook_num].grph.fitsCanvas = tabslist[self.notebook_num].grph.canvas.create_image(
-            tabslist[self.notebook_num].grph.fits_offset, image=tabslist[self.notebook_num].grph.fitsTk, anchor="nw", tag="fits")
+        #tabslist[self.notebook_num].grph.fitsPIL = Image.fromarray(np.flip(self.img_array,0))
+        #tabslist[self.notebook_num].grph.fitsTk = ImageTk.PhotoImage(tabslist[self.notebook_num].grph.fitsPIL)
+        ###
+        tabslist[self.notebook_num].grph.fits_initialize(Image.fromarray(np.flip(self.img_array,0)))
+        #tabslist[self.notebook_num].grph.fitsCanvas = \
+        #    tabslist[self.notebook_num].grph.canvas.create_image(
+        #        tabslist[self.notebook_num].grph.fits_offset,
+        #        image=tabslist[self.notebook_num].grph.fitsTk, anchor="nw", tag="fits")
+        ###
         tabslist[self.notebook_num].grph.canvas.config(
             xscrollcommand=tabslist[self.notebook_num].grph.hbar.set,
             yscrollcommand=tabslist[self.notebook_num].grph.vbar.set,
@@ -347,8 +355,8 @@ class Files:
             tabslist[self.notebook_num].grph.canvas.winfo_width()-1, tabslist[self.notebook_num].grph.canvas.winfo_height()-1,
             tabslist[self.notebook_num].grph.fitsPIL.size[0], tabslist[self.notebook_num].grph.fitsPIL.size[1])
         (tabslist[self.notebook_num].grph.cv_w, tabslist[self.notebook_num].grph.cv_h,
-         tabslist[self.notebook_num].grph.im_w, tabslist[self.notebook_num].grph.im_h) = (
-            self.cv_w, self.cv_h, self.im_w, self.im_h)
+         tabslist[self.notebook_num].grph.im_w, tabslist[self.notebook_num].grph.im_h) = \
+            (self.cv_w, self.cv_h, self.im_w, self.im_h)
         tabslist[self.notebook_num].grph.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2)
         tabslist[self.notebook_num].grph.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2)
         tabslist[self.notebook_num].grph.canvas.tag_raise("O")
@@ -356,7 +364,7 @@ class Files:
 
         self.fits_opened = True
         self.currentCoords_update(None, tabslist, notebook, forangle=True)
-        self.lambet_trace_callback()
+        self.lambet_trace_callback(None)
 
     def openREG(self, notebook, tabslist):
         self.notebook_num = notebook.index(notebook.select()) + 1
@@ -543,39 +551,39 @@ class Files:
         self.lambet_index = [(frame, position)
                             for frame, framelist in enumerate(self.current_tab.entry_list)
                             for position in range(len(framelist[0]))
-                            if self.current_tab.entry_list[frame][0][position] == "lambda_on"][0]
+                            if self.current_tab.entry_list[frame][0][position] == "LambdaOn"][0]
         self.startpos_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "start_pos_x"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "StartPositionX"][0]
         self.coordsys_index = [(frame, position)
                                for frame, framelist in enumerate(self.current_tab.entry_list)
                                for position in range(len(framelist[0]))
-                               if self.current_tab.entry_list[frame][0][position] == "coordsys"][0]
+                               if self.current_tab.entry_list[frame][0][position] == "COORD_SYS"][0]
         self.offabs_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "lambda_off"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "LambdaOff"][0]
         self.offrel_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "lamdel_off"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "deltaLambda"][0]
         self.relative_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "relative"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "RELATIVE"][0]
         self.scanDirection_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "scan_direction"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "SCAN_DIRECTION"][0]
         self.Nspacing_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "N"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "n"][0]
         self.otf_index = [(frame, position)
                              for frame, framelist in enumerate(self.current_tab.entry_list)
                              for position in range(len(framelist[0]))
-                             if self.current_tab.entry_list[frame][0][position] == "otflen"][0]
+                             if self.current_tab.entry_list[frame][0][position] == "scan_length"][0]
 
         self.obs_sys = [None]
         self.relative = [0]
@@ -596,7 +604,6 @@ class Files:
                     lambda event, tabslist=tabslist, notebook=notebook: self.currentCoords_update(event, tabslist, notebook, SD=True), add="+")
         tabslist[self.notebook_num].grph.canvas.bind("<B5-Motion>",
                     lambda event, disable=False: self.lambet_trace_callback(event, disabletracers=disable), add="+")
-        tabslist[self.notebook_num].grph.canvas.bind("z", lambda event: self.tracers_disable(event))
 
         self.tracers_init()
         #if self.window_from_new:
@@ -789,7 +796,7 @@ class Files:
                                                     final[4], y_dim - final[5],
                                                     final[6], y_dim - final[7])
                 self.current_tab.grph.set_onpos(None, int(self.current_tab.grph.startxy_c/2))
-                self.current_tab.grph.setBox(None)
+                self.current_tab.grph.setBox(None, generate_B4=self.current_tab.grph.fileedit_gB4)
 
             if disabletracers:
                 self.tracers_init()

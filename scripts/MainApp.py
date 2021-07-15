@@ -61,8 +61,8 @@ class MainApplication:
 
         self.param = Parameters()
 
-        # This list implementation is an artifact of a previous version.
-        # self.tabsList is not further appended to after this.
+        # This list implementation is an artifact of a previous version
+        # self.tabsList is not further appended to after this
         self.tabsList = []
         self.tabsList.append(0)
         self.tabsList.append(Tabs(master, self.notebook, self.mainFrame2, self.param.paramlist, "Untitled"))

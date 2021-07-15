@@ -18,6 +18,8 @@ class Graphic:
         self.Box = []
         self.box_selected,  self.over_object, self.over_selected, self.clicked, self.box_manip, self.box_resize, self.boxDrawn = \
             False, False, False, False, False, False, False
+        self.fileedit_gB4 = True
+        self.zoom = 1
 
         Gframe.grid_rowconfigure(0, weight=1)
         Gframe.grid_columnconfigure(0, weight=1)
@@ -32,14 +34,14 @@ class Graphic:
         Sframe.grid_columnconfigure([0], weight=1)
         self.clearButton = ttk.Button(Sframe, text="Clear", state=tk.DISABLED, takefocus=0, command=lambda _=None, mode="select": self.resetBox(_, mode))
         self.clearButton.grid(row=0, column=1, rowspan=2, sticky="nsew")
-        self.canvas.bind("<BackSpace>", lambda event, mode="select": self.resetBox(event, mode))
         self.slidercanvas_1 = tk.Canvas(Sframe, bg="gray", height=10, highlightthickness=0, highlightcolor="black", borderwidth=0, relief=tk.GROOVE)
-        self.slidercanvas_2 = tk.Canvas(Sframe, bg="gray", width=200, height=10, highlightthickness=0, highlightcolor="black", borderwidth=0, relief=tk.GROOVE)
         self.slidercanvas_1.grid(row=0, column=0, rowspan=1, columnspan=1, sticky="ew")
+        self.slidercanvas_2 = tk.Canvas(Sframe, bg="gray", width=200, height=10, highlightthickness=0, highlightcolor="black", borderwidth=0, relief=tk.GROOVE)
         self.slidercanvas_2.grid(row=1, column=0, rowspan=1, columnspan=1, sticky="ew")
         self.slider_temp()
         Sframe.bind("<Configure>", self.slider_temp)
 
+        self.canvas.bind("<BackSpace>", lambda event, mode="select": self.resetBox(event, mode))
         self.canvas.bind("<Enter>", lambda event, mode="default": self.cursors(event, mode))
         self.canvas.bind("<Button-1>", self.B12_callback)
         self.canvas.bind("<B1-Motion>", self.B1M_callback)
@@ -48,154 +50,28 @@ class Graphic:
         self.canvas.bind('<MouseWheel>', self.v_scroll)
         self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
 
-        self.canvas.bind("<Command-MouseWheel>", lambda event: self.testzoom(event))
+        self.canvas.bind("<Command-MouseWheel>", lambda event: self.fits_zoom(event))
+        self.canvas.bind("<Configure>", lambda event, object=self.canvas: self.update_proxy(event, self.canvas))
         self.canvas.bind("<KeyRelease-Meta_L>", lambda event: self.endzoom(event))
-        self.canvas.bind("a", lambda event: self.testpos(event))
-        self.canvas.bind("d", lambda event: self.deletetestpos(event))
-        self.zoom = 1
-
-    def h_scroll(self, event):
-        self.canvas.xview_scroll(-3 * event.delta, 'units')
-
-    def v_scroll(self, event):
-        self.canvas.yview_scroll(-3 * event.delta, 'units')
-
-    def testzoom(self, event):
-        self.canvas.focus_set()
-        px,py = event.widget.winfo_pointerxy()
-        rx,ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
-        cx,cy = (px-rx, py-ry)
-        self.eventx, self.eventy = self.canvas.canvasx(cx),self.canvas.canvasy(cy)
-        print(self.canvas.canvasx(cx),self.canvas.canvasy(cy))
-
-        scale = 1 - np.sign(event.delta)*0.02
-        self.zoom *= scale
-
-        imgx, imgy = self.fitsPIL.size
-        print(imgx, imgy)
-        finalx, finaly = imgx*self.zoom, imgy*self.zoom
-        print(finalx, finaly)
-        fitsPILtemp = self.fitsPIL.resize((int(round(finalx)), int(round(finaly))), Image.NEAREST)
-        self.fitsTk = ImageTk.PhotoImage(fitsPILtemp)
-
-        #fitspos = (self.canvas.canvasx(cx)*(1-scale), self.canvas.canvasy(cy)*(1-scale))
-        self.canvas.delete("fits")
-        self.fitsCanvas = self.canvas.create_image((0,0), image=self.fitsTk, anchor="nw", tag="fits")
-        self.fits_CurSize = (self.fitsTk.width(), self.fitsTk.height())
-        print(self.fits_CurSize)
-
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
-
-        #self.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2-(self.canvas.canvasx(cx)*self.zoom))
-        #self.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2-(self.canvas.canvasy(cy)*self.zoom))
-
-        self.canvas.xview_scroll(int(round(self.eventx*(scale-1))), 'units')
-        self.canvas.yview_scroll(int(round(self.eventy*(scale-1))), 'units')
-
-        self.canvas.tag_lower("fits")
-
-        self.canvas.scale("box",0,0,scale,scale)
-
-    def endzoom(self, *args):
-        if self.box_selected:
-            ori_selected_state = True
-            ori_selected_box_id = self.box_id
-        else:
-            ori_selected_state = False
-        self.box_selected = True
-        for i in range(len(self.Box)):
-            self.box_id = self.Box[i][0]
-            self.setBox(None, generate_B4=False)
-        if ori_selected_state:
-            self.box_id = ori_selected_box_id
-            self.canvas.event_generate("<B5-Motion>")
-        else:
-            self.box_selected = False
-
-
-    def testpos(self, event):
-        px,py = event.widget.winfo_pointerxy()
-        rx,ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
-        cx,cy = (px-rx, py-ry)
-        self.eventx, self.eventy = self.canvas.canvasx(cx),self.canvas.canvasy(cy)
-        print(self.eventx, self.eventy)
-        self.canvas.create_line(5,0,50,0, fill="orange", tag=("testline","box"))
-        a = self.canvas.create_line(5,0.4,100,0.4, fill="pink", tag=("testline","box"))
-        self.canvas.create_line(5,0.6,150,0.6, fill="cyan", tag=("testline","box"))
-        self.canvas.create_line(5,1,200,1, fill="white", tag=("testline","box"))
-        print(self.canvas.coords(a))
-
-
-    def deletetestpos(self, *args):
-        self.canvas.delete("testline")
-        print(self.eventx*self.zoom, self.eventy*self.zoom)
-        self.canvas.xview_moveto(-(self.cv_w-self.im_w)/self.im_w/2-(self.eventx*(self.zoom-1)))
-        self.canvas.yview_moveto(-(self.cv_h-self.im_h)/self.im_h/2-(self.eventy*(self.zoom-1)))
-
-
-
-    def slider_temp(self, *args):
-        """Initialize the box color slider."""
-        self.scBg = []
-        self.colorSlider([self.slidercanvas_1, self.slidercanvas_2], "red", "pink")
-        for num, s_set in enumerate(((self.slidercanvas_1, ["box","marker"]), (self.slidercanvas_2, ["reg","regmarker"]))):
-            s_set[0].bind("<Button-1>",
-                          lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
-            s_set[0].bind("<B1-Motion>",
-                          lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
-
-    def colorSlider(self, canvas_list, color1, color2):
-        """Draw the color gradient and slider nob."""
-        canvas_list[0].update()
-        self.sliderwidth, self.sliderheight = canvas_list[0].winfo_width(), canvas_list[0].winfo_height()
-        self.colorGradient = list(Color(color1).range_to(Color(color2), self.sliderwidth))
-        self.gradBg = Image.new("RGB", (self.sliderwidth, self.sliderheight), "#FFFFFF")
-        self.gradBgDraw = ImageDraw.Draw(self.gradBg)
-        for x, color in enumerate(self.colorGradient):
-            self.gradBgDraw.line((x, 0, x, self.sliderheight), fill=str(color), width=1)
-        for canvas in canvas_list:
-            self.scBg.append([])
-            self.scBg[-1].append(ImageTk.PhotoImage(self.gradBg))
-            self.scBg[-1].append(canvas.create_image(0, 0, image=self.scBg[-1][0], anchor=tk.NW))
-            self.scBg[-1].append(canvas.create_line(1, 0, 1, self.sliderheight, width=2, fill="#444444"))
-
-    def sliderNob(self, event, canvas, target, pad):
-        """Determine the color chosen based on the position of the nob."""
-        width, height = self.sliderwidth, self.sliderheight
-        try:
-            if width > event.x > pad:
-                canvas.coords(self.scBg[target[1]][2], event.x, pad - 1, event.x, height)
-            elif event.x <= pad:
-                canvas.coords(self.scBg[target[1]][2], pad, pad - 1, pad, height)
-            elif width <= event.x:
-                canvas.coords(self.scBg[target[1]][2], width - pad, pad - 1, width - pad, height)
-            if target[0][0] == "box":
-                self.boxColor = str(self.colorGradient[int(canvas.coords(self.scBg[target[1]][2])[0] + pad - 1)])
-                temp_color = self.boxColor
-            elif target[0][0] == "reg":
-                self.regColor = str(self.colorGradient[int(canvas.coords(self.scBg[target[1]][2])[0] + pad - 1)])
-                temp_color = self.regColor
-            self.canvas.itemconfig(target[0][0], outline=temp_color)
-            self.canvas.itemconfig(target[0][1], fill=temp_color)
-            if self.box_selected:
-                self.canvas.itemconfig(self.Box[self.box_index][1], fill="")
-                self.canvas.itemconfig(self.Box[self.box_index][2], fill="")
-            if not self.resizeFill == "":
-                self.canvas.itemconfig("resize", fill=temp_color)
-        except AttributeError:
-            pass
 
     def B12_callback(self, event):
         self.canvas.focus_set()
         self.bad_start = False
         self.clicked = True
-        if not False:
-            if self.box_selected or self.boxDrawn:
-                self.deselectBox(event, "B12")
-            else:
-                self.setStart_draw(event)
+        if self.box_selected or self.boxDrawn:
+            self.deselectBox(event, "B12")
         else:
-            self.bad_start = True
+            self.setStart_draw(event)
+
+    def B12_leave(self, event):
+        try:
+            if self.boxDrawn:
+                self.endPos_temp = (self.canvas.canvasx(event.x), self.canvas.canvasy(event.y))
+                self.boxPos_temp = self.canvas.coords(self.Box[self.box_index_hover][0])
+                if max(self.boxPos_temp) in self.endPos_temp or min(self.boxPos_temp) in self.endPos_temp:
+                    self.canvas.event_generate("<Leave>")
+        except AttributeError:
+            pass
 
     def B1M_callback(self, event):
         if not self.box_selected and not self.boxDrawn and self.clicked:
@@ -211,6 +87,199 @@ class Graphic:
     def B2R_callback(self, event):
         if self.box_selected and self.box_manip:
             self.setBox(event)
+
+    def update_proxy(self, _, object):
+        object.update()
+
+    def h_scroll(self, event):
+        self.canvas.xview_scroll(-3 * event.delta, 'units')
+        self.fits_zoom(event, zoom=False)
+
+    def v_scroll(self, event):
+        self.canvas.yview_scroll(-3 * event.delta, 'units')
+        self.fits_zoom(event, zoom=False)
+
+    def fits_initialize(self, PILimage):
+        """Create the necessary image attributes when a FITS file is loaded."""
+        # Keep reference to the image
+        self.fitsPIL = PILimage
+        self.fitsTk = ImageTk.PhotoImage(self.fitsPIL)
+        self.fitsCanvas = self.canvas.create_image(0,0, image=self.fitsTk, anchor="nw", tag="fits")
+
+        # Update current size of image
+        self.fits_CurSize = (self.fitsTk.width(), self.fitsTk.height())
+
+        # Create bounding box for the image used in determining its scaled size
+        self.fits_region = self.canvas.create_rectangle(0, 0, self.fits_CurSize[0], self.fits_CurSize[1],
+                                                        width=0, outline="yellow", fill="", tag="fregion")
+
+        # Add binding for window resize
+        self.canvas.bind("<Configure>", lambda event: self.fits_zoom(event), add="+")
+
+    def fits_zoom(self, event, zoom=True):
+        """Handles zooming and scrolling of the zoomed image."""
+        if zoom:
+            # Obtain cursor position on the canvas
+            ## Due to a bug in MacOS the more direct self.canvas.canvasx(event.x) is not used
+            self.canvas.focus_set()
+            px, py = event.widget.winfo_pointerxy()
+            rx, ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
+            print(event.widget.winfo_rootx(), event.widget.winfo_rooty())
+            cx, cy = (px-rx, py-ry)
+            self.eventx, self.eventy = self.canvas.canvasx(cx),self.canvas.canvasy(cy)
+
+            # Set current and overall scaling factor
+            scale = 1 - event.delta*0.01
+            self.zoom *= scale
+            if self.zoom < 0.1:
+                self.zoom /= scale
+                return
+
+            self.canvas.delete("marker")
+        else:
+            scale = 1
+            self.eventx, self.eventy = 0, 0
+
+        # Determine bounding region of the zoomed image
+        ## Because of the integer rounding required for some methods, the bounding box is not entirely accurate
+        ## which causes some of the edge to be trimmed off when zoomed beyond the canvas size
+        self.canvas.scale("fregion", self.eventx, self.eventy, scale, scale)
+        self.fits_region_bbox = self.canvas.coords(self.fits_region)
+        self.canvas.config(scrollregion=self.fits_region_bbox)
+
+        # Determine display region of the zoomed tile
+        self.display_region_bbox = self.fits_region_bbox.copy()
+        if self.display_region_bbox[0] < self.canvas.canvasx(0):
+            self.display_region_bbox[0] = self.canvas.canvasx(0)
+        if self.display_region_bbox[1] < self.canvas.canvasy(0):
+            self.display_region_bbox[1] = self.canvas.canvasy(0)
+        if self.display_region_bbox[2] > self.canvas.canvasx(self.canvas.winfo_width()):
+            self.display_region_bbox[2] = self.canvas.canvasx(self.canvas.winfo_width())
+        if self.display_region_bbox[3] > self.canvas.canvasy(self.canvas.winfo_height()):
+            self.display_region_bbox[3] = self.canvas.canvasy(self.canvas.winfo_height())
+
+        # Determine cropping area of original image and execute crop
+        crop_area = [max(int(round((self.display_region_bbox[0]-self.fits_region_bbox[0])/self.zoom)), 0),
+                     max(int(round((self.display_region_bbox[1]-self.fits_region_bbox[1])/self.zoom)), 0),
+                     min(int(round(self.fits_OriSize[0]-0-(self.fits_region_bbox[2]-self.display_region_bbox[2])/self.zoom)), self.fits_OriSize[0]-0),
+                     min(int(round(self.fits_OriSize[1]-0-(self.fits_region_bbox[3]-self.display_region_bbox[3])/self.zoom)), self.fits_OriSize[1]-0)]
+        fitsPIL_cropped = self.fitsPIL.crop(crop_area)
+
+        # Resize cropped tile and redraw image
+        final_size = (int(round((crop_area[2]-crop_area[0]+1)*self.zoom))-1,
+                      int(round((crop_area[3]-crop_area[1]+1)*self.zoom))-1)
+        fitsPIL_cropped_zoomed = fitsPIL_cropped.resize(final_size, Image.NEAREST)
+        self.fitsTk = ImageTk.PhotoImage(fitsPIL_cropped_zoomed)
+        self.canvas.delete("fits")
+        self.fitsCanvas = self.canvas.create_image(-self.fits_region_bbox[0]+self.display_region_bbox[0],
+                                                    -self.fits_region_bbox[1]+self.display_region_bbox[1],
+                                                    image=self.fitsTk, anchor="nw", tag="fits")
+
+        if zoom:
+            # Adjust position to keep cursor on target while zooming
+            self.canvas.xview_scroll(int(round(self.eventx*(scale-1))), 'units')
+            self.canvas.yview_scroll(int(round(self.eventy*(scale-1))), 'units')
+
+            # Match the bounding box's position to the image
+            self.canvas.moveto("fregion", 0, 0)
+
+            # Update image information
+            self.fits_CurSize = (int(round(self.fits_region_bbox[2]-self.fits_region_bbox[0])),
+                                 int(round(self.fits_region_bbox[3]-self.fits_region_bbox[1])))
+
+            # Zoom canvas objects
+            self.canvas.scale("box", 0, 0, scale, scale)
+            self.canvas.tag_raise("box")
+
+        self.canvas.tag_lower("fits")
+
+    def endzoom(self, *args):
+        """Update fits tab after zooming to account for pixel rounding errors."""
+        if self.box_selected:
+            ori_selected_state = True
+            ori_selected_box_id = self.box_id
+        else:
+            ori_selected_state = False
+        self.box_selected = True
+        for i in range(len(self.Box)):
+            self.box_id = self.Box[i][0]
+            self.setBox(None, generate_B4=True)
+        if ori_selected_state:
+            self.box_id = ori_selected_box_id
+            self.fileedit_gB4 = True
+            self.canvas.event_generate("<B4-Motion>")
+            self.fileedit_gB4 = True
+        else:
+            self.box_selected = False
+        self.canvas.event_generate("<Configure>")
+
+    def slider_temp(self, *args):
+        """Initialize the box color slider."""
+        # Create list to hold references
+        self.scBg = []
+
+        # Create sliders
+        self.colorSlider([self.slidercanvas_1, self.slidercanvas_2], "red", "pink")
+
+        # Bind slider
+        for num, s_set in enumerate(((self.slidercanvas_1, ["box","marker"]), (self.slidercanvas_2, ["reg","regmarker"]))):
+            s_set[0].bind("<Button-1>",
+                          lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
+            s_set[0].bind("<B1-Motion>",
+                          lambda event, canvas=s_set[0], target=[s_set[1],num], pad=1: self.sliderNob(event, canvas, target, pad))
+
+    def colorSlider(self, canvas_list, color1, color2):
+        """Draw the color gradient and slider nob."""
+        # Get current slider dimensions
+        canvas_list[0].update()
+        self.sliderwidth, self.sliderheight = canvas_list[0].winfo_width(), canvas_list[0].winfo_height()
+
+        # Create color gradient image
+        self.colorGradient = list(Color(color1).range_to(Color(color2), self.sliderwidth))
+        self.gradBg = Image.new("RGB", (self.sliderwidth, self.sliderheight), "#FFFFFF")
+        self.gradBgDraw = ImageDraw.Draw(self.gradBg)
+        for x, color in enumerate(self.colorGradient):
+            self.gradBgDraw.line((x, 0, x, self.sliderheight), fill=str(color), width=1)
+
+        # Create canvas images and keep references
+        for canvas in canvas_list:
+            self.scBg.append([])
+            self.scBg[-1].append(ImageTk.PhotoImage(self.gradBg))
+            self.scBg[-1].append(canvas.create_image(0, 0, image=self.scBg[-1][0], anchor=tk.NW))
+            self.scBg[-1].append(canvas.create_line(1, 0, 1, self.sliderheight, width=2, fill="#444444"))
+
+    def sliderNob(self, event, canvas, target, pad):
+        """Determine the color chosen based on the position of the nob."""
+        width, height = self.sliderwidth, self.sliderheight
+        try:
+            # Determine corresponding position of the nob on the color gradient
+            if width > event.x > pad:
+                canvas.coords(self.scBg[target[1]][2], event.x, pad - 1, event.x, height)
+            elif event.x <= pad:
+                canvas.coords(self.scBg[target[1]][2], pad, pad - 1, pad, height)
+            elif width <= event.x:
+                canvas.coords(self.scBg[target[1]][2], width - pad, pad - 1, width - pad, height)
+            if target[0][0] == "box":
+                self.boxColor = str(self.colorGradient[int(canvas.coords(self.scBg[target[1]][2])[0] + pad - 1)])
+                temp_color = self.boxColor
+            elif target[0][0] == "reg":
+                self.regColor = str(self.colorGradient[int(canvas.coords(self.scBg[target[1]][2])[0] + pad - 1)])
+                temp_color = self.regColor
+
+            # Apply color change
+            self.canvas.itemconfig(target[0][0], outline=temp_color)
+            self.canvas.itemconfig(target[0][1], fill=temp_color)
+
+            # Hollow out markers if the box is in the "selected" state
+            if self.box_selected:
+                self.canvas.itemconfig(self.Box[self.box_index][1], fill="")
+                self.canvas.itemconfig(self.Box[self.box_index][2], fill="")
+
+            # For debugging with self.resizeFill
+            if not self.resizeFill == "":
+                self.canvas.itemconfig("resize", fill=temp_color)
+        except AttributeError:
+            pass
 
     def slider_master(self, vartuple):
         """Scale and update the FITS image.
@@ -228,11 +297,9 @@ class Graphic:
             self.temp2 = (self.temp2 / np.max(self.fitsNp_ori)) * 255
             self.temp = Image.fromarray(np.flip(self.temp2, 0))
             self.fitsPIL = self.temp
-            self.temp = ImageTk.PhotoImage(self.temp.resize(self.fits_CurSize,Image.NEAREST))
-            self.canvas.delete("fits")
-            self.canvas.create_image(self.fits_offset, image=self.temp, anchor="nw", tag="fits")
-            self.canvas.tag_raise("O")
-        except AttributeError:
+            self.fits_zoom(None, zoom=False)
+        except ValueError:
+            print("sm_eror")
             pass
 
     def color_func(self, mode, pixel, lowerb, upperb, pixel_min, pixel_max, gamma, gain, bias_x, bias_y):
@@ -270,6 +337,7 @@ class Graphic:
         Kwargs:
             "REG" : Separate initialization for pyregion boxes
         """
+        # Create box with the appropriate tags
         try:
             self.Box.append([self.canvas.create_polygon(kwargs["REG"], fill="", width=1, outline=self.regColor, tag="newbox")])
             self.box_id = self.canvas.find_withtag("newbox")[0]
@@ -286,11 +354,15 @@ class Graphic:
                 self.over_selected = False
                 self.boxDrawn = True
                 self.startxy_c = 0
+
         if True:
             try:
                 self.id_str = str(self.box_id)
+
+                # Delete peripheral items from the old box
                 self.canvas.delete("mid"+self.id_str, "resize"+self.id_str,"marker"+self.id_str,"regmarker"+self.id_str)
 
+                # Calculate relevant quantities in advance
                 box_coords = self.canvas.coords(self.box_id)
                 (self.NWPos, self.NEPos, self.SEPos, self.SWPos) = tuple(box_coords[i:i + 2] for i in range(0, 8, 2))
                 self.UPos = ((self.NWPos[0] + self.NEPos[0]) / 2, (self.NWPos[1] + self.NEPos[1]) / 2)
@@ -303,7 +375,9 @@ class Graphic:
                 except KeyError:
                     self.degNow = -(((0.5 * math.pi) - cmath.phase(complex(self.UPos[0] - self.midPos[0], self.midPos[1] - self.UPos[1])) - (2*math.pi)) % (-2*math.pi))
 
+                # Save references to self.Box
                 self.Box[self.box_index] = [self.box_id]
+                ## Scan direction markers
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(box_coords[self.startxy_c] - 2, box_coords[self.startxy_c+1] - 2,
                                             box_coords[self.startxy_c] + 2, box_coords[self.startxy_c+1] + 2,
@@ -313,14 +387,14 @@ class Graphic:
                     self.canvas.create_oval(box_coords[small_circle_index_temp] - 1, box_coords[small_circle_index_temp+1] - 1,
                                             box_coords[small_circle_index_temp] + 1, box_coords[small_circle_index_temp+1] + 1,
                                             width=1, fill=self.boxColor, outline=self.boxColor, tag=("O", "box", "marker", "marker"+self.id_str)))
-
+                ## Maintain appropriate tags to differentiate pyregion boxes
                 if "reg" in self.canvas.gettags(self.box_id):
                     self.canvas.itemconfig(self.Box[self.box_index][1], fill=self.regColor, outline=self.regColor, tag=("O", "reg", "regmarker", "regmarker"+self.id_str))
                     self.canvas.itemconfig(self.Box[self.box_index][2], fill=self.regColor, outline=self.regColor, tag=("O", "reg", "regmarker", "regmarker"+self.id_str))
                 if self.box_selected:
                     self.canvas.itemconfig(self.Box[self.box_index][1], fill="")
                     self.canvas.itemconfig(self.Box[self.box_index][2], fill="")
-
+                ## Items on the perimeter for box manipulation
                 self.resizeFill = ""
                 self.Box[self.box_index].append(
                     self.canvas.create_oval(self.NWPos[0] - 6, self.NWPos[1] + 5, self.NWPos[0] + 5, self.NWPos[1] - 6,
@@ -351,6 +425,7 @@ class Graphic:
                                         width=0, fill=self.resizeFill, tag=("O", "mid", "mid" + self.id_str)))
                 self.Box[self.box_index].append([self.midPos, self.degNow, self.startxy_c, self.dirct])
 
+                # Bind the canvas items to their respective functions
                 self.canvas.tag_bind("all", "<Enter>", lambda event, mode="Enter": self.hover_detect(event, mode))
                 self.canvas.tag_bind("all", "<Leave>", lambda event, mode="Leave": self.hover_detect(event, mode))
                 self.canvas.tag_bind("all", "<Button-1>", lambda event: self.setStart_manip(event))
@@ -392,9 +467,7 @@ class Graphic:
 
                 self.canvas.tag_bind("all", "<ButtonRelease-1>", lambda event: self.selectBox(event))
 
-                #
-                #self.canvas.tag_raise(self.Box[self.box_index][1])
-                #
+                # Final miscellaneous updates
                 self.box_manip, self.box_resize = False, False
                 self.box_index = self.box_index_selected
                 self.box_id = self.Box[self.box_index][0]
@@ -408,6 +481,8 @@ class Graphic:
     def set_onpos(self, _, corner, manual=False):
         if self.box_selected:
             box_coord = tuple(self.canvas.coords(self.box_id)[i:i + 2] for i in range(0, 8, 2))
+
+            # Determine relative position of the turning corner
             if self.scan_direction == "X":
                 if corner == 0 or corner == 2:
                     self.dirct = 2
@@ -418,22 +493,17 @@ class Graphic:
                     self.dirct = 2
                 else:
                     self.dirct = -2
+
+            # Relocate start_pos marker
             (temp1x, temp1y) = box_coord[corner]
-            self.canvas.coords(self.Box[self.box_index][1], temp1x - 2, temp1y - 4, temp1x + 20, temp1y + 4)
+            self.canvas.coords(self.Box[self.box_index][1], temp1x - 2, temp1y - 4, temp1x + 2, temp1y + 4)
+
+            # Update attributes
             self.Box[self.box_index][-1][2] = corner*2
             self.startxy_c = corner*2
+
         if manual:
             self.setBox(None)
-
-    def B12_leave(self, event):
-        try:
-            if self.boxDrawn:
-                self.endPos_temp = (self.canvas.canvasx(event.x), self.canvas.canvasy(event.y))
-                self.boxPos_temp = self.canvas.coords(self.Box[self.box_index_hover][0])
-                if max(self.boxPos_temp) in self.endPos_temp or min(self.boxPos_temp) in self.endPos_temp:
-                    self.canvas.event_generate("<Leave>")
-        except AttributeError:
-            pass
 
     def hover_detect(self, event, mode):
         """Detect cursor status."""
@@ -444,6 +514,7 @@ class Graphic:
                 if self.canvas.find_withtag("current")[0] in self.Box[self.box_index] and self.box_selected:
                     self.over_selected = True
                 else:
+                    # Not currently in use
                     self.box_index_hover = [index for index, box in enumerate(self.Box) if self.canvas.find_withtag("current")[0] in box][0]
             except IndexError:
                 pass
@@ -523,7 +594,10 @@ class Graphic:
     def setStart_manip(self, event):
         if self.over_selected:
             try:
+                # Record cursor's starting position
                 self.startPos = (self.canvas.canvasx(event.x), self.canvas.canvasy(event.y))
+
+                # Calculate revelant quantities in advance
                 (self.NWPos, self.NEPos, self.SEPos, self.SWPos) = tuple(self.canvas.coords(self.box_id)[i:i + 2] for i in range(0, 8, 2))
                 self.UPos = ((self.NWPos[0] + self.NEPos[0]) / 2, (self.NWPos[1] + self.NEPos[1]) / 2)
                 self.DPos = ((self.SEPos[0] + self.SWPos[0]) / 2, (self.SEPos[1] + self.SWPos[1]) / 2)
@@ -626,7 +700,6 @@ class Graphic:
                                ref2[1] + self.posChangeNorm * math.cos(self.projDeg) * math.sin(self.diagDeg))
             except ZeroDivisionError:
                 pass
-
         self.posChange = [self.endPos[0] - ref2[0], ref2[1] - self.endPos[1]]
         self.projDeg = (o * math.pi) - (cmath.phase(complex(self.posChange[0], self.posChange[1]))) + self.degNow
         self.posChangeNorm = np.linalg.norm(self.posChange)
