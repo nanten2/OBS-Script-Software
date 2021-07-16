@@ -1,9 +1,10 @@
 import math, cmath
 import numpy as np
-from PIL import Image, ImageDraw, ImageTk
-from colour import Color
+
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageDraw, ImageTk
+from colour import Color
 
 class Graphic:
     def __init__(self, master, Gframe, Sframe):
