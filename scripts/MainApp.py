@@ -28,7 +28,7 @@ class InitDialog:
         root : <class 'tkinter.Tk'>
             tkinter root
         """
-        InitFrame = tk.Frame(Gvars.root)
+        InitFrame = tk.Frame(root)
         InitFrame.grid(row=0, column=0, sticky="nsew")
 
         Gvars.tlwind_init()
