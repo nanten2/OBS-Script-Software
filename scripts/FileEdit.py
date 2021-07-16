@@ -1,21 +1,23 @@
 import os, math, cmath
+from itertools import chain
 import numpy as np
-from PIL import Image, ImageTk
+
 import tkinter as tk
 from tkinter import ttk, filedialog, simpledialog
 import ttkwidgets as ttkw
-from itertools import chain
-import pyregion
+from PIL import Image
 
+import pyregion
 from astropy import units as u
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
-from astropy.wcs import WCS, Wcsprm
+from astropy.wcs import WCS
 from astropy.wcs._wcs import InvalidTransformError
 
 import Gvars
 import MainApp
 from Graphic import Graphic
+
 
 class Tabs:
     """Governs the notebook widget of the GUI interface.
