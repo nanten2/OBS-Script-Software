@@ -390,6 +390,7 @@ class Graphic:
             bias_sep_y = pixel_min + ((bias_y-0.5) * (pixel_max - pixel_min))
             bound_diff = upperb - lowerb
             global_diff = pixel_max - pixel_min
+            print(gamma)
             f23 = lambda pixel: (((pixel-bias_sep_x)/bound_diff)**gamma)*global_diff*gain + bias_sep_y
             return np.piecewise(pixel, [(pixel<lowerb), (lowerb <= pixel) * (pixel <= upperb), (upperb < pixel)], [f1, f23, f4])
 

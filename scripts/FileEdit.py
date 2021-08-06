@@ -377,14 +377,18 @@ class Files:
         if not temp_path == "":
             self.grph.FITSpath = temp_path[0]
 
+        print("pass")
+
         try:
-            self.fits_WCS = WCS(fits.open(self.grph.FITSpath)[0].header)
+            self.fits_WCS = WCS(fits.open(self.grph.FITSpath)[0].header, naxis=2)
         except InvalidTransformError:
+            print("except")
             self.fits_WCS = WCS(fits.open(self.grph.FITSpath)[0].header, translate_units='s', naxis=2)
             ##test
             # print(self.fits_WCS)
             # print(fits.open(self.grph.FITSpath)[0].header["NAXIS"])
             ##
+        print("pass1")
 
         kw_list = ["RADESYS", "CTYPE1", "CTYPE"]
         found_keyword = False
@@ -409,11 +413,16 @@ class Files:
             [img_array] = img_array.copy()
         self.grph.fitsNp_ori = img_array
 
-        if img_array.dtype.name == "int16":
-            lut = np.linspace(1 / (2 ** 16), 255, 2 ** 16).astype(np.uint16)
-            img_array = lut[img_array].astype(np.uint8)
-        elif img_array.dtype.name == "float32":
-            img_array = (img_array / np.max(img_array) + 0.000001) * 255
+        print(img_array.dtype.name)
+        if False:
+            if img_array.dtype.name == "int16":
+                lut = np.linspace(1 / (2 ** 16), 255, 2 ** 16).astype(np.uint16)
+                img_array = lut[img_array].astype(np.uint8)
+            elif img_array.dtype.name == "float32":
+                img_array = (img_array / np.max(img_array) + 0.000001) * 255
+
+        img_array = (img_array / np.max(img_array) + 0.000001) * 255
+
 
         self.fits_OriSize = img_array.shape[::-1]
         self.grph.fits_OriSize = self.fits_OriSize
@@ -435,7 +444,6 @@ class Files:
         self.fits_opened = True
         self.currentCoords_update(None, forangle=True)
         self.lambet_trace_callback(None)
-        print("pass")
 
     def openREG(self):
         """Load a pyregion file and draw the boxes on the tkinter.Canvas instance."""
@@ -516,10 +524,8 @@ class Files:
                     # Calculate the coordinates of the on position and start position based on the drawn box
                     boxPos = self.grph.canvas.coords(self.grph.box_id)
                     box_degnow = self.grph.Box[self.grph.box_index][-1][1]
-                    box_midx, box_midy = (boxPos[0] + boxPos[2] + boxPos[4] + boxPos[6]) * scale_ratio[0] / 4, \
-                                         (self.fits_CurSize[1] - 1 - (
-                                                 boxPos[1] + boxPos[3] + boxPos[5] + boxPos[7]) / 4) * scale_ratio[
-                                             1]
+                    box_midx = (boxPos[0] + boxPos[2] + boxPos[4] + boxPos[6]) * scale_ratio[0] / 4
+                    box_midy = (self.fits_CurSize[1] - 1 - (boxPos[1] + boxPos[3] + boxPos[5] + boxPos[7]) / 4) * scale_ratio[1]
                     lambet_on = self.fits_WCS.pixel_to_world(box_midx, box_midy)
                     startposx_1 = self.fits_WCS.pixel_to_world(
                         boxPos[self.grph.Box[self.grph.box_index][-1][2]] * scale_ratio[0],
