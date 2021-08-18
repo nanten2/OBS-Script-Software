@@ -22,14 +22,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          echo pip3 install poetry
-          echo poetry install
+          pip3 install poetry
+          poetry install
 
       - name: Compile obs_pS on MacOS
         #if: contains(matrix.os, macos-latest)
         run: |
-          echo ls
-          echo poetry run pyinstaller obs_pS.py for compile procedure on mac
+          ls
+          poetry run pyinstaller obs_pS.py for compile procedure on mac
           
   build:
     name: Create release
