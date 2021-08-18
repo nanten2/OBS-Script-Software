@@ -33,7 +33,7 @@ jobs:
           echo Compile program with pyinstaller4.2
           echo
           poetry run pip3 install pyinstaller==4.2
-          poetry run pyinstaller obs_pS.py --onefile
+          poetry run pyinstaller scripts/obs_pS.py --onefile
           
   build:
     name: Create release
