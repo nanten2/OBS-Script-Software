@@ -11,6 +11,7 @@ astropy = "^4.1"
 colour = "^0.1.5"
 numpy = "^1.18.5"
 Pillow = "^8.0.1"
+pyinstaller = "4.2"
 pyregion = "^2.0"
 
 [tool.poetry.dev-dependencies]
