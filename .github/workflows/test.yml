@@ -26,21 +26,9 @@ jobs:
           poetry install
 
       - name: Compile obs_pS on MacOS
-        if: contains(matrix.os, "macos")
+        if: contains(matrix.os)
         run: |
-          # poetry run pyinstaller --options for compile procedure on mac
-          # other terminal command if needed
-
-      - name: Compile obs_pS on Ubuntu
-        if: contains(matrix.os, "ubuntu")
-        run: |
-          # poetry run pyinstaller --options for compile procedure on ubuntu/linux
-          # other terminal command if needed
-      - name: Compile obs_pS on Windows
-        if: contains(matrix.os, "windows")
-        run: |
-          # poetry run pyinstaller --options for compile procedure on windows
-          # other terminal command if needed
+          poetry run pyinstaller obs_pS.py for compile procedure on mac
           
   build:
     name: Create release
