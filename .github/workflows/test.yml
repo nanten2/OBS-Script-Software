@@ -28,6 +28,7 @@ jobs:
       - name: Compile obs_pS on MacOS
         #if: contains(matrix.os, macos-latest)
         run: |
+          echo ls
           echo poetry run pyinstaller obs_pS.py for compile procedure on mac
           
   build:
@@ -52,8 +53,6 @@ jobs:
         #env:
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/upload-artifact@v2
-        run: |
-            echo ls
         with:
           name: ${{ matrix.os }}
           path: /dist
