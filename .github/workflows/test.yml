@@ -4,6 +4,7 @@
 name: Compile and Release
 
 on:
+  push
 
 jobs:     
   compile:
