@@ -22,14 +22,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo Install Poetry and use it to create the virtual environment
+          echo 
           pip3 install poetry
           poetry install
 
       - name: Compile obs_pS on MacOS
         #if: contains(matrix.os, macos-latest)
         run: |
-          ls
-          poetry run pyinstaller obs_pS.py for compile procedure on mac
+          echo Compile program with pyinstaller4.2
+          echo
+          poetry run pip3 install pyinstaller==4.2
+          poetry run pyinstaller obs_pS.py --onefile
           
   build:
     name: Create release
