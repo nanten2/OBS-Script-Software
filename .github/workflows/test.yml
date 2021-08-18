@@ -52,10 +52,10 @@ jobs:
         #env:
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/upload-artifact@v2
+        run: |
+            echo ls
         with:
           name: ${{ matrix.os }}
-          run: |
-            echo ls
           path: /dist
         
     
