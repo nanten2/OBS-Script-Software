@@ -52,11 +52,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: true
+                
+      - name: Checkout to workspace
+        uses: actions/checkout@v2
           
       - name: Check directory
         run: |
-          ls ${{ github.workspace }}
-          
+          ls ${{ github.workspace }
+      
       - name: Upload assets
         id: upload-artifact
         env:
