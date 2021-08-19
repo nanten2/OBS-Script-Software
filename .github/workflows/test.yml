@@ -46,22 +46,21 @@ jobs:
           draft: false
           prerelease: true
           
-      #- name: Checkout to workspace
-      #  uses: actions/checkout@v2
-          
       - name: Check directory
         run: |
           echo ls ${{ github.workspace }}
           echo ls dist
           ls
       
-      - name: Upload assets
-        id: upload-artifact
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/upload-artifact@v2
+      - name: Zip the dist folder
+        uses: papeloto/action-zip@v1
         with:
-          name: ${{ matrix.os }}
-          path: dist
+          files: dist
+          dest: obs.zip
+      
+      - name: Upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: obs.zip
         
     
