@@ -52,6 +52,7 @@ jobs:
       - name: Check directory
         run: |
           ls ${{ github.workspace }}
+          ls dist
       
       - name: Upload assets
         id: upload-artifact
@@ -60,6 +61,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
-          path: ${{ github.workspace }}/dist
+          path: dist
         
     
