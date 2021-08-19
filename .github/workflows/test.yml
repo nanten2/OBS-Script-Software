@@ -52,10 +52,15 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: true
+          
+      - name: Check directory
+        run: |
+          ls
+          
       - name: Upload assets
         id: upload-artifact
-        #env:
-        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
