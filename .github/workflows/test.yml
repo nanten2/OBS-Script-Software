@@ -6,8 +6,8 @@ name: Compile and Release
 on:
   push
 
-jobs:     
-  compile:
+jobs:  
+  build:
     name: Compile on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -35,13 +35,6 @@ jobs:
           poetry run pip3 install pyinstaller==4.2
           poetry run pyinstaller scripts/obs_pS.py --onefile
           
-  build:
-    name: Create release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest]
-    steps:
       - name: Create release
         id : create_release
         uses: actions/create-release@v1
@@ -52,14 +45,13 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: true
-                
+          
       - name: Checkout to workspace
         uses: actions/checkout@v2
           
       - name: Check directory
         run: |
           ls ${{ github.workspace }}
-          ls ${{ github.workspace }}/scripts
       
       - name: Upload assets
         id: upload-artifact
@@ -68,6 +60,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
-          path: ${{ github.workspace }}/scripts
+          path: ${{ github.workspace }}/dist
         
     
