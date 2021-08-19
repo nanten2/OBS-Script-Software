@@ -4,7 +4,9 @@
 name: Compile and Release
 
 on:
-  push
+  push:
+    tags:
+      - "test"
 
 jobs:  
   build:
@@ -35,17 +37,6 @@ jobs:
           poetry run pip3 install pyinstaller==4.2
           poetry run pyinstaller scripts/obs_pS.py --onefile
           
-      - name: Create release
-        id : create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: true
-          
       - name: Check directory
         run: |
           echo ls ${{ github.workspace }}
@@ -58,9 +49,10 @@ jobs:
           files: dist
           dest: obs.zip
       
-      - name: Upload assets
-        uses: softprops/action-gh-release@v1
+      - name: Create release and upload assets
+        uses: ncipollo/release-action@v1
         with:
-          files: obs.zip
+          artifacts: "obs.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
         
     
