@@ -40,8 +40,7 @@ jobs:
       - name: Check directory
         run: |
           echo ls ${{ github.workspace }}
-          echo ls dist
-          ls
+          ls dist
       
       - name: Zip the dist folder
         uses: papeloto/action-zip@v1
