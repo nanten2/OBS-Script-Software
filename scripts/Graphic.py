@@ -1,7 +1,6 @@
 import math, cmath
 import numpy as np
 
-
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageDraw, ImageTk
