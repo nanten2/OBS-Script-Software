@@ -42,16 +42,16 @@ jobs:
           echo ls ${{ github.workspace }}
           ls dist
       
-      - name: Zip the dist folder
-        uses: papeloto/action-zip@v1
-        with:
-          files: dist
-          dest: obs.zip
+      #- name: Zip the dist folder
+      #  uses: papeloto/action-zip@v1
+      #  with:
+      #    files: dist
+      #    dest: obs.zip
       
       - name: Create release and upload assets
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "obs.zip"
+          artifacts: "dist"
           token: ${{ secrets.GITHUB_TOKEN }}
         
     
