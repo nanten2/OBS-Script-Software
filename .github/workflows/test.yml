@@ -55,7 +55,7 @@ jobs:
           
       - name: Check directory
         run: |
-          ls
+          ls ${{ github.workspace }}
           
       - name: Upload assets
         id: upload-artifact
@@ -64,6 +64,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
-          path: OBS-Script-Software/dist
+          path: ${{ github.workspace }}/dist
         
     
