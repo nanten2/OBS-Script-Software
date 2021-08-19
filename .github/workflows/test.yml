@@ -59,6 +59,7 @@ jobs:
       - name: Check directory
         run: |
           ls ${{ github.workspace }
+          ls dist
       
       - name: Upload assets
         id: upload-artifact
