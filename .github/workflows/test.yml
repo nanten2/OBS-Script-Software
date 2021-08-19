@@ -46,13 +46,14 @@ jobs:
           draft: false
           prerelease: true
           
-      - name: Checkout to workspace
-        uses: actions/checkout@v2
+      #- name: Checkout to workspace
+      #  uses: actions/checkout@v2
           
       - name: Check directory
         run: |
-          ls ${{ github.workspace }}
-          ls dist
+          echo ls ${{ github.workspace }}
+          echo ls dist
+          ls
       
       - name: Upload assets
         id: upload-artifact
