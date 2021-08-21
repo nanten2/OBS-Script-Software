@@ -34,7 +34,8 @@ jobs:
         run: |
           echo Compile program with pyinstaller4.2
           echo
-          poetry run pip3 install pyinstaller==4.2
+          #poetry run pip3 install pyinstaller==4.2
+          pip3 install pyinstaller==4.2
           poetry run pyinstaller scripts/obs_pS.py --noconsole --onefile
       
       #- name: Zip the dist folder
