@@ -42,6 +42,13 @@ jobs:
         with:
           files: dist
           dest: obs.zip
+        
+      - name: Zip the dist folder
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'obs2.zip'
+          path: dist
       
       - name: Check directory
         run: |
@@ -49,15 +56,17 @@ jobs:
           echo
           echo Original folder size
           du -sh dist
-          echo Zipped size
+          echo Zipped size 1
           du -sh obs.zip
+          echo Zipped size 2
+          du -sh obs2.zip
           file dist/obs_pS
           
       
       - name: Create release and upload assets
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "obs.zip"
+          artifacts: "obs2.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
         
     
