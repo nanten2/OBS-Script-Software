@@ -40,6 +40,7 @@ jobs:
           poetry add pyinstaller
           echo Run pyinstaller
           poetry run pyinstaller scripts/obs_pS.py --noconsole
+          zip -r obs2.zip dist/
       
       #- name: Zip the dist folder
       #  uses: papeloto/action-zip@v1
@@ -47,12 +48,12 @@ jobs:
       #    files: dist
       #    dest: obs.zip
         
-      - name: Zip the dist folder
-        uses: thedoctor0/zip-release@master
-        with:
-          type: 'zip'
-          filename: 'obs2.zip'
-          path: dist
+      #- name: Zip the dist folder
+      #  uses: thedoctor0/zip-release@master
+      #  with:
+      #    type: 'zip'
+      #    filename: 'obs2.zip'
+      #    path: dist
       
       - name: Check directory
         run: |
