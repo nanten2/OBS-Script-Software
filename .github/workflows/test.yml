@@ -28,7 +28,7 @@ jobs:
           echo 
           pip3 install poetry
           poetry env use python
-          poetry shoe --tree
+          poetry show --tree
           poetry install
 
       - name: Compile obs_pS on MacOS
