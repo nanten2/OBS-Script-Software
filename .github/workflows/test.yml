@@ -42,6 +42,7 @@ jobs:
           ls -hl
           echo
           ls dist
+          ls dist -hl
           file dist/obs_pS
       
       - name: Zip the dist folder
