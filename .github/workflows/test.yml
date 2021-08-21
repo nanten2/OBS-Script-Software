@@ -47,8 +47,12 @@ jobs:
         run: |
           ls dist
           echo
+          echo Original folder size
           du -sh dist
+          echo Zipped size
+          du -sh obs.zip
           file dist/obs_pS
+          
       
       - name: Create release and upload assets
         uses: ncipollo/release-action@v1
