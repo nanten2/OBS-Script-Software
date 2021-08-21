@@ -56,7 +56,10 @@ jobs:
       
       - name: Check directory
         run: |
-          poetry run pip3 freeze
+          echo Directory
+          ls
+          echo
+          echo dist
           ls dist
           echo
           echo Original folder size
