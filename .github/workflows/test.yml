@@ -36,7 +36,7 @@ jobs:
           echo
           #poetry run pip3 install pyinstaller==4.2
           pip3 install pyinstaller==4.2
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --onefile
+          poetry run pyinstaller scripts/obs_pS.py --noconsole
       
       #- name: Zip the dist folder
       #  uses: papeloto/action-zip@v1
@@ -44,12 +44,12 @@ jobs:
       #    files: dist
       #    dest: obs.zip
         
-      #- name: Zip the dist folder
-      #  uses: thedoctor0/zip-release@master
-      #  with:
-      #    type: 'zip'
-      #    filename: 'obs2.zip'
-      #    path: dist
+      - name: Zip the dist folder
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'obs2.zip'
+          path: dist
       
       - name: Check directory
         run: |
@@ -61,9 +61,9 @@ jobs:
           echo Zipped size 1
           #du -sh obs.zip
           echo Zipped size 2
-          #du -sh obs2.zip
+          du -sh obs2.zip
           echo Zipped size 3
-          du -sh dist/obs_pS
+          #du -sh dist/obs_pS
           file dist/obs_pS
           
       
