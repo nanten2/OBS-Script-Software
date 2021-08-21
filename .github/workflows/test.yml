@@ -36,6 +36,7 @@ jobs:
           echo
           poetry run pip3 install pyinstaller==4.2
           poetry run pyinstaller scripts/obs_pS.py --noconsole
+          open dist/obs_pS.app
       
       - name: Zip the dist folder
         uses: papeloto/action-zip@v1
