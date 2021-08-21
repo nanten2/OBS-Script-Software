@@ -45,10 +45,9 @@ jobs:
       
       - name: Check directory
         run: |
-          ls -hl
-          echo
           ls dist
-          ls -hl dist
+          echo
+          du -sh dist
           file dist/obs_pS
       
       - name: Create release and upload assets
