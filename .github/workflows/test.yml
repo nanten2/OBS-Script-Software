@@ -54,7 +54,7 @@ jobs:
           pip3 install pyregion
           echo
           echo Install pyinstaller
-          pip3 install pysintaller
+          pip3 install pyinstaller
           echo
           echo Compile with pyinstaller
           pyinstaller scripts/obs_pS.py --noconsole
