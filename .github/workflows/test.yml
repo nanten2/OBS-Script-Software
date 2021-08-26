@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, macos-10.15, macos-11]
+        os: [macos-10.15]
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python
@@ -31,15 +31,33 @@ jobs:
           poetry show --tree
           poetry install
 
-      - name: Compile obs_pS on MacOS
+      - name: Compile obs_pS on MacOS (poetry)
         #if: contains(matrix.os, macos-latest)
+        if: false
         run: |
-          echo Compile program with pyinstaller4.2
-          echo
+          echo Compile in poetry venv
+          echo add pyinstaller to poetry venv
           #poetry run pip3 install pyinstaller
           poetry add pyinstaller
           echo Run pyinstaller
           poetry run pyinstaller scripts/obs_pS.py --noconsole
+          zip -r obs2.zip dist/
+      
+      - name: Compile obs_pS on MacOS 
+        if: true
+        run: |
+          echo Install dependencies
+          pip3 install astropy
+          pip3 install colour
+          pip3 install numpy
+          pip3 install Pillow
+          pip3 install pyregion
+          echo
+          echo Install pyinstaller
+          pip3 install pysintalelr
+          echo
+          echo Compile with pyinstaller
+          pyinstaller scripts/obs_pS.py --noconsole
           zip -r obs2.zip dist/
       
       #- name: Zip the dist folder
