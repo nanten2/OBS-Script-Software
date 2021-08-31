@@ -46,6 +46,10 @@ jobs:
       - name: Compile obs_pS on MacOS 
         if: true
         run: |
+          echo Install/update tk/tcl
+          pip3 install tk
+          pip3 install tcl
+          echo
           echo Install dependencies
           pip3 install astropy
           pip3 install colour
