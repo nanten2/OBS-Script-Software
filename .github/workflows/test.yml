@@ -42,8 +42,8 @@ jobs:
           #poetry run pip3 install pyinstaller
           poetry add pyinstaller
           echo Run pyinstaller
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
-          #poetry run pyinstaller scripts/obs_pS.py --noconsole 
+          #poetry run pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --collect-all='tkinter'
           zip -r obs2.zip dist/
       
       - name: Compile obs_pS on MacOS 
