@@ -11,7 +11,8 @@ on:
 jobs:  
   build:
     name: Compile on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    #runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
     strategy:
       matrix:
         os: [macos-10.15]
@@ -33,18 +34,18 @@ jobs:
 
       - name: Compile obs_pS on MacOS (poetry)
         #if: contains(matrix.os, macos-latest)
-        if: false
+        if: true
         run: |
           echo Compile in poetry venv
           echo add pyinstaller to poetry venv
           #poetry run pip3 install pyinstaller
           poetry add pyinstaller
           echo Run pyinstaller
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
+          poetry run pyinstaller scripts/obs_pS.py --noconsole 
           zip -r obs2.zip dist/
       
       - name: Compile obs_pS on MacOS 
-        if: true
+        if: false
         run: |
           echo Install/update tk/tcl
           pip3 install tk
@@ -63,7 +64,7 @@ jobs:
           echo Check installed packages
           pip freeze
           echo Compile with pyinstaller
-          pyinstaller scripts/obs_pS.py --noconsole
+          pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
           zip -r obs2.zip dist/
       
       #- name: Zip the dist folder
