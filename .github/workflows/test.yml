@@ -29,7 +29,7 @@ jobs:
           echo Install Poetry and use it to create the virtual environment
           echo 
           pip3 install poetry
-          poetry env use python
+          #poetry env use python
           poetry show --tree
           poetry install
 
