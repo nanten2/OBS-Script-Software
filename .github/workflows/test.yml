@@ -32,6 +32,12 @@ jobs:
           #poetry env use python
           poetry show --tree
           poetry install
+          echo
+          echo test
+          brew install pyenv
+          PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/usr/local/opt/tcl-tk/include'  --with-tcltk-libs='-L/usr/local/opt/tcl-tk/lib -ltcl8.6 -ltk8.6' --enable-shared" pyenv install 3.8.5
+          poetry use 3.8
+          poetry update
 
       - name: Compile obs_pS on MacOS (poetry)
         #if: contains(matrix.os, macos-latest)
