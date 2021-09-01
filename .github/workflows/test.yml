@@ -66,7 +66,7 @@ jobs:
           echo Check installed packages
           pip freeze
           echo Compile with pyinstaller
-          pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
+          pyinstaller scripts/obs_pS.py --noconsole --collect-all --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
           zip -r obs2.zip dist/
       
       #- name: Zip the dist folder
