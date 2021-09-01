@@ -60,6 +60,8 @@ jobs:
           echo Install pyinstaller
           pip3 install pyinstaller
           echo
+          echo Check installed packages
+          pip freeze
           echo Compile with pyinstaller
           pyinstaller scripts/obs_pS.py --noconsole
           zip -r obs2.zip dist/
