@@ -22,7 +22,7 @@ jobs:
         if: true
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -36,6 +36,7 @@ jobs:
           echo test
           brew install pyenv
           PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/usr/local/opt/tcl-tk/include'  --with-tcltk-libs='-L/usr/local/opt/tcl-tk/lib -ltcl8.6 -ltk8.6' --enable-shared" pyenv install 3.7.2
+          pyenv global 3.7.2
           poetry env use 3.7
           poetry update
 
