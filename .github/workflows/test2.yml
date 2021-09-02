@@ -1,13 +1,13 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-​
+
 name: Compile and Release 2
-​
+
 on:
   push:
     tags:
       - "test"
-​
+
 jobs:
   build:
     name: Compile on ${{ matrix.os }}
@@ -27,8 +27,8 @@ jobs:
         run: |
           PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/usr/local/opt/tcl-tk/include' --with-tcltk-libs='-L/usr/local/opt/tcl-tk/lib -ltcl8.6 -ltk8.6' --enable-shared" pyenv install 3.8.5
           pyenv global 3.8.5
-​
-​
+
+
       - name: Install dependencies
         run: |
           echo Install Poetry and use it to create the virtual environment
@@ -38,7 +38,7 @@ jobs:
           poetry install
           echo
           echo test
-​
+
       - name: Compile obs_pS on MacOS (poetry)
         #if: contains(matrix.os, macos-latest)
         if: true
