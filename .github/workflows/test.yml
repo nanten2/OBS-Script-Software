@@ -34,10 +34,10 @@ jobs:
           poetry install
           echo
           echo test
-          brew install pyenv
-          PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/usr/local/opt/tcl-tk/include'  --with-tcltk-libs='-L/usr/local/opt/tcl-tk/lib -ltcl8.6 -ltk8.6' --enable-shared" pyenv install 3.8.5
-          poetry env use 3.8
-          poetry update
+          #brew install pyenv
+          #PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/usr/local/opt/tcl-tk/include'  --with-tcltk-libs='-L/usr/local/opt/tcl-tk/lib -ltcl8.6 -ltk8.6' --enable-shared" pyenv install 3.8.5
+          #poetry env use 3.8
+          #poetry update
 
       - name: Compile obs_pS on MacOS (poetry)
         #if: contains(matrix.os, macos-latest)
@@ -48,8 +48,8 @@ jobs:
           #poetry run pip3 install pyinstaller
           poetry add pyinstaller
           echo Run pyinstaller
-          #poetry run pyinstaller scripts/obs_pS.py --noconsole --add-binary='/System/Library/Frameworks/Tk.framework/Tk':'tk' --add-binary='/System/Library/Frameworks/Tcl.framework/Tcl':'tcl'
-          poetry run pyinstaller scripts/obs_pS.py --noconsole
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --add-data='/System/Library/Frameworks/Tk.framework':'tk' --add-data='/System/Library/Frameworks/Tcl.framework':'tcl'
+          #poetry run pyinstaller scripts/obs_pS.py --noconsole
           zip -r obs2.zip dist/
       
       - name: Compile obs_pS on MacOS 
