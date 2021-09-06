@@ -85,6 +85,10 @@ class Files:
         file_menu_dd.add_command(label="Load ds9 Region File...", command=self.openREG)
         file_menu_dd.add_command(label="Save As...", command=self.save)
 
+        ######
+        self.master.bind("a", lambda event: self.openFITS())
+        ######
+
         self.fits_opened = False
         self.setup_cCu()
 

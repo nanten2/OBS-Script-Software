@@ -7,11 +7,11 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.6, <3.9"
-astropy = "^4.1"
 colour = "^0.1.5"
 numpy = "^1.18.5"
 Pillow = "^8.0.1"
 pyregion = "^2.0"
+pyinstaller = "^4.5.1"
 
 [tool.poetry.dev-dependencies]
 
