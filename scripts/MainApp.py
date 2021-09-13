@@ -20,7 +20,8 @@ class InitDialog:
         InitFrame = tk.Frame(root)
         InitFrame.grid(row=0, column=0, sticky="nsew")
 
-        Gvars.tlwind_init()
+        #Gvars.tlwind_init()
+        #vars.curOS_init()
 
         newButton = ttk.Button(InitFrame, text="New", takefocus=0, command=self.init_new)
         newButton.grid(row=0, column=0, sticky="nsew")

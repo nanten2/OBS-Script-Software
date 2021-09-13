@@ -6,6 +6,8 @@ from tkinter import ttk
 from PIL import Image, ImageDraw, ImageTk
 from colour import Color
 
+import Gvars
+
 
 class Graphic:
     """Handles the displaying and scaling of the FITS image, as well as the drawing, selection, and manipulation of the
@@ -33,6 +35,8 @@ class Graphic:
     degChange : float
         Degrees changed while rotating, before setBox is called
     degNow : float
+    delta_coeff : int
+        Modifier for event.delta
     dirct : int
         Index difference from the start position corner to the end corner of the scan line
     endPos : tuple
@@ -70,7 +74,7 @@ class Graphic:
         To update parameter values while moving or resizing box
     <B2-Motion> (right click drag) :
         To update parameter values while rotating box
-    <B4-Motion> :
+    <Shift-#> :
         To execute FileEdit.Files.currentCoords_update
         This might cause issues on operating systems that use B4 for the mousewheel.
     """
@@ -85,10 +89,12 @@ class Graphic:
         self.box_selected,  self.over_object, self.over_selected, self.clicked, self.box_manip, self.box_resize, self.boxDrawn = \
             False, False, False, False, False, False, False
         self.zoom = 1
+        self.delta_coeff_init()
 
         Gframe.grid_rowconfigure(0, weight=1)
         Gframe.grid_columnconfigure(0, weight=1)
-        self.canvas = tk.Canvas(Gframe, bg="gray", cursor="cross-hair", highlightthickness=0, yscrollincrement=1, xscrollincrement=1)
+        self.canvas = tk.Canvas(Gframe, bg="gray", highlightthickness=0, yscrollincrement=1, xscrollincrement=1)
+        self.cursors(None, "default")
         self.canvas.grid(row=0, column=0, sticky="nsew")
         self.vbar = ttk.Scrollbar(Gframe, orient="vertical", command=self.canvas.yview)
         self.vbar.grid(row=0, column=1, rowspan=1, sticky="ns")
@@ -106,18 +112,36 @@ class Graphic:
         self.slider_temp(None)
         Sframe.bind("<Configure>", self.slider_temp)
 
+        self.draw_keybind()
+        self.zoom_keybind()
+
+    def draw_keybind(self):
         self.canvas.bind("<BackSpace>", lambda event, mode="select": self.resetBox(event, mode))
         self.canvas.bind("<Enter>", lambda event, mode="default": self.cursors(event, mode))
         self.canvas.bind("<Button-1>", self.B12_callback)
         self.canvas.bind("<B1-Motion>", self.B1M_callback)
         self.canvas.bind("<ButtonRelease-1>", self.B1R_callback)
         self.canvas.bind("<ButtonRelease-2>", self.B2R_callback)
-        self.canvas.bind('<MouseWheel>', self.v_scroll)
-        self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
+        if Gvars.curOS == "Linux":
+            self.canvas.bind('<Button-4>', self.v_scroll)
+            self.canvas.bind('<Shift-Button-5>', self.v_scroll)
+            self.canvas.bind('<Shift-Button-4>', self.h_scroll)
+            self.canvas.bind('<Shift-Button-5>', self.h_scroll)
+        else:
+            self.canvas.bind('<MouseWheel>', self.v_scroll)
+            self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
 
-        self.canvas.bind("<Command-MouseWheel>", lambda event: self.fits_zoom(event))
-        self.canvas.bind("<Configure>", lambda event, object=self.canvas: self.update_proxy(event, self.canvas))
+    def zoom_keybind(self):
+        self.canvas.bind("<Configure>", lambda event, target=self.canvas: self.update_proxy(event, self.canvas))
         self.canvas.bind("<KeyRelease-Meta_L>", lambda event: self.endzoom(event))
+        if Gvars.curOS == "Linux":
+            self.canvas.bind("<Command-Button-4>", lambda event: self.fits_zoom(event))
+            self.canvas.bind("<Command-Button-5>", lambda event: self.fits_zoom(event))
+        else:
+            self.canvas.bind("<Command-MouseWheel>", lambda event: self.fits_zoom(event))
+
+    def update_proxy(self, _, target):
+        target.update()
 
     def B12_callback(self, event):
         self.canvas.focus_set()
@@ -152,15 +176,18 @@ class Graphic:
         if self.box_selected and self.box_manip:
             self.setBox(event)
 
-    def update_proxy(self, _, object):
-        object.update()
+    def delta_coeff_init(self):
+        if Gvars.curOS == "Darwin":
+            self.delta_coeff = 1
+        elif Gvars.curOS == "Windows" or Gvars.curOS == "Linux":
+            self.delta_coeff = 120
 
     def h_scroll(self, event):
-        self.canvas.xview_scroll(-3 * event.delta, 'units')
+        self.canvas.xview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
     def v_scroll(self, event):
-        self.canvas.yview_scroll(-3 * event.delta, 'units')
+        self.canvas.yview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
     def fits_initialize(self, PILimage):
@@ -192,7 +219,7 @@ class Graphic:
             eventx, eventy = self.canvas.canvasx(cx), self.canvas.canvasy(cy)
 
             # Set current and overall scaling factor
-            scale = 1 - event.delta*0.01
+            scale = 1 - event.delta * 0.01 / self.delta_coeff
             self.zoom *= scale
             if self.zoom < 0.1:
                 self.zoom /= scale
@@ -268,7 +295,7 @@ class Graphic:
             self.setBox(None)
         if ori_selected_state:
             self.box_id = ori_selected_box_id
-            self.canvas.event_generate("<B4-Motion>")
+            self.canvas.event_generate("<Shift-#>")
         else:
             self.box_selected = False
 
@@ -567,7 +594,7 @@ class Graphic:
             self.box_manip, self.box_resize = False, False
             self.box_index = self.box_index_selected
             self.box_id = self.Box[self.box_index][0]
-            self.canvas.event_generate("<B4-Motion>")
+            self.canvas.event_generate("<Shift-#>")
             self.canvas.event_generate("<Enter>")
         except (AttributeError, IndexError):
             pass
@@ -670,7 +697,7 @@ class Graphic:
                     self.box_selected = True
                     self.over_object = physical
                     self.over_selected = physical
-                    self.canvas.event_generate("<B4-Motion>")
+                    self.canvas.event_generate("<Shift-#>")
                     self.cursors(event, "move")
                     self.clearButton.config(state=tk.ACTIVE)
         except IndexError:
@@ -692,7 +719,7 @@ class Graphic:
                 self.over_selected = False
                 self.clicked = False
                 self.clearButton.config(state=tk.DISABLED)
-                self.canvas.event_generate("<B4-Motion>")
+                self.canvas.event_generate("<Shift-#>")
 
     def resetBox(self, _, mode):
         """Delete the selected box."""
@@ -700,7 +727,7 @@ class Graphic:
         if mode == "select":
             if self.box_selected:
                 self.box_selected = False
-                self.canvas.event_generate("<B4-Motion>")
+                self.canvas.event_generate("<Shift-#>")
                 if "reg" not in self.canvas.gettags(self.box_id):
                     self.boxDrawn = False
                 self.over_selected = False
@@ -864,12 +891,29 @@ class Graphic:
     def cursors(self, _, mode):
         if self.over_selected:
             if mode == "default":
-                self.canvas.config(cursor="cross-hair")
+                if Gvars.curOS == "Darwin":
+                    cursor = "cross-hair"
+                else:
+                    cursor = "crosshair"
             elif mode == "hand":
-                self.canvas.config(cursor="openhand")
+                if Gvars.curOS == "Darwin":
+                    cursor = "openhand"
+                else:
+                    cursor = "hand1"
             elif mode == "move":
-                self.canvas.config(cursor="fleur")
+                if Gvars.curOS == "Darwin":
+                    cursor = "fleur"
+                else:
+                    cursor = "fleur"
             elif mode == "rotate":
-                self.canvas.config(cursor="exchange")
+                if Gvars.curOS == "Darwin":
+                    cursor = "exchange"
+                else:
+                    cursor = "exchange"
+            self.canvas.config(cursor=cursor)
         else:
-            self.canvas.config(cursor="cross-hair")
+            if Gvars.curOS == "Darwin":
+                cursor = "cross-hair"
+            else:
+                cursor = "crosshair"
+        self.canvas.config(cursor=cursor)

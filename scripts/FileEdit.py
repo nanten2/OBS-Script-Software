@@ -85,10 +85,6 @@ class Files:
         file_menu_dd.add_command(label="Load ds9 Region File...", command=self.openREG)
         file_menu_dd.add_command(label="Save As...", command=self.save)
 
-        ######
-        self.master.bind("a", lambda event: self.openFITS())
-        ######
-
         self.fits_opened = False
         self.setup_cCu()
 
@@ -675,7 +671,7 @@ class Files:
 
         self.grph.canvas.bind("<B1-Motion>", lambda event: self.currentCoords_update(event), add="+")
         self.grph.canvas.bind("<B2-Motion>", lambda event: self.currentCoords_update(event), add="+")
-        self.grph.canvas.bind("<B4-Motion>", lambda event: self.currentCoords_update(event), add="+")
+        self.grph.canvas.bind("<Shift-#>", lambda event: self.currentCoords_update(event), add="+")
 
         # Not currently in use
         self.grph.canvas.bind("<B5-Motion>",
