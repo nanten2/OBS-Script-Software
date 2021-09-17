@@ -671,7 +671,7 @@ class Files:
 
         self.grph.canvas.bind("<B1-Motion>", lambda event: self.currentCoords_update(event), add="+")
         self.grph.canvas.bind("<B2-Motion>", lambda event: self.currentCoords_update(event), add="+")
-        self.grph.canvas.bind("<Shift-#>", lambda event: self.currentCoords_update(event), add="+")
+        self.grph.canvas.bind("<Shift-B4-Motion>", lambda event: self.currentCoords_update(event), add="+")
 
         # Not currently in use
         self.grph.canvas.bind("<B5-Motion>",
@@ -869,8 +869,7 @@ class Files:
             bet_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
             startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
             starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
-            angle = float(
-                self.entry_list[self.angle_index[0]][1][self.angle_index[1]].get()) * math.pi / 180 - self.frame_angle
+            angle = float(self.entry_list[self.angle_index[0]][1][self.angle_index[1]].get()) * math.pi / 180 - self.frame_angle
 
             # Create the SkyCoord the transform to the FITS coordinate frame
             lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[-1])
@@ -893,7 +892,7 @@ class Files:
             else:
                 cur_angle = self.grph.Box[self.grph.box_index][-1][1]
 
-            oristart = complex(start_x - midPos_x, start_y - midPos_y) * cmath.exp(complex(0, -cur_angle))
+            oristart = complex(start_x - midPos_x, start_y - midPos_y) * cmath.exp(complex(0, -cur_angle)) #startpos if position_angle=0
             width, height = -(oristart.real * 2), (oristart.imag * 2)
             rel_start_new = oristart * cmath.exp(complex(0, angle))
             start_x_new, start_y_new = rel_start_new.real + midPos_x, rel_start_new.imag + midPos_y

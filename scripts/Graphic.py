@@ -74,7 +74,7 @@ class Graphic:
         To update parameter values while moving or resizing box
     <B2-Motion> (right click drag) :
         To update parameter values while rotating box
-    <Shift-#> :
+    <Shift-B4-Motion> :
         To execute FileEdit.Files.currentCoords_update
         This might cause issues on operating systems that use B4 for the mousewheel.
     """
@@ -295,7 +295,7 @@ class Graphic:
             self.setBox(None)
         if ori_selected_state:
             self.box_id = ori_selected_box_id
-            self.canvas.event_generate("<Shift-#>")
+            self.canvas.event_generate("<Shift-B4-Motion>")
         else:
             self.box_selected = False
 
@@ -520,16 +520,16 @@ class Graphic:
             self.resizeFill = ""
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NWPos[0] - 6, NWPos[1] + 5, NWPos[0] + 5, NWPos[1] - 6,
-                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NW")))
+                                    width=0, fill="orange", tag=("O", "resize", "resize" + id_str, "C", "NW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NEPos[0] - 6, NEPos[1] + 5, NEPos[0] + 5, NEPos[1] - 6,
-                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NE")))
+                                    width=0, fill="yellow", tag=("O", "resize", "resize" + id_str, "C", "NE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SEPos[0] - 6, SEPos[1] + 5, SEPos[0] + 5, SEPos[1] - 6,
-                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SE")))
+                                    width=0, fill="lime", tag=("O", "resize", "resize" + id_str, "C", "SE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SWPos[0] - 6, SWPos[1] + 5, SWPos[0] + 5, SWPos[1] - 6,
-                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SW")))
+                                    width=0, fill="cyan", tag=("O", "resize", "resize" + id_str, "C", "SW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(UPos[0] - 6, UPos[1] + 5, UPos[0] + 5, UPos[1] - 6,
                                     width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + id_str, "UD", "U")))
@@ -594,7 +594,7 @@ class Graphic:
             self.box_manip, self.box_resize = False, False
             self.box_index = self.box_index_selected
             self.box_id = self.Box[self.box_index][0]
-            self.canvas.event_generate("<Shift-#>")
+            self.canvas.event_generate("<Shift-B4-Motion>")
             self.canvas.event_generate("<Enter>")
         except (AttributeError, IndexError):
             pass
@@ -614,7 +614,6 @@ class Graphic:
             box_coord = tuple(self.canvas.coords(self.box_id)[i:i + 2] for i in range(0, 8, 2))
 
             # Determine relative position of the turning corner
-            print(self.scan_direction)
             if self.scan_direction == "X":
                 if corner == 0 or corner == 2:
                     self.dirct = 2
@@ -697,7 +696,7 @@ class Graphic:
                     self.box_selected = True
                     self.over_object = physical
                     self.over_selected = physical
-                    self.canvas.event_generate("<Shift-#>")
+                    self.canvas.event_generate("<Shift-B4-Motion>")
                     self.cursors(event, "move")
                     self.clearButton.config(state=tk.ACTIVE)
         except IndexError:
@@ -719,7 +718,7 @@ class Graphic:
                 self.over_selected = False
                 self.clicked = False
                 self.clearButton.config(state=tk.DISABLED)
-                self.canvas.event_generate("<Shift-#>")
+                self.canvas.event_generate("<Shift-B4-Motion>")
 
     def resetBox(self, _, mode):
         """Delete the selected box."""
@@ -727,7 +726,7 @@ class Graphic:
         if mode == "select":
             if self.box_selected:
                 self.box_selected = False
-                self.canvas.event_generate("<Shift-#>")
+                self.canvas.event_generate("<Shift-B4-Motion>")
                 if "reg" not in self.canvas.gettags(self.box_id):
                     self.boxDrawn = False
                 self.over_selected = False
@@ -874,17 +873,18 @@ class Graphic:
             except ZeroDivisionError:
                 pass
 
-        # Calculate the projection degree and norm of the end position relative to the ref points
+        # Calculate the projection degree and norm of the end position relative to the reference points
         refEnd = [self.endPos[0] - ref2[0], ref2[1] - self.endPos[1]]
-        projDeg = (o * math.pi) - (cmath.phase(complex(refEnd[0], refEnd[1]))) + self.degNow
         refEndNorm = np.linalg.norm(refEnd)
+        projDeg = (o * math.pi) - (cmath.phase(complex(refEnd[0], refEnd[1]))) + self.degNow
 
         # Calculate and return final change in coordinates of the relevant points
+        pi_half = 0.5*math.pi
         posChange = \
-            [a1 * (refEndNorm * math.cos(projDeg - phi11*0.5*math.pi) * math.cos(-self.degNow - phi12*0.5*math.pi)) - (r * pos_offset[0]),
-             a2 * (refEndNorm * math.cos(projDeg - phi21*0.5*math.pi) * math.cos(-self.degNow - phi22*0.5*math.pi)) - (r * pos_offset[1]),
-             a3 * (refEndNorm * math.cos(projDeg - phi31*0.5*math.pi) * math.cos(-self.degNow - phi32*0.5*math.pi)),
-             a4 * (refEndNorm * math.cos(projDeg - phi41*0.5*math.pi) * math.cos(-self.degNow - phi42*0.5*math.pi))]
+            [a1 * (refEndNorm * math.cos(projDeg - phi11*pi_half) * math.cos(-self.degNow - phi12*pi_half)) - (r * pos_offset[0]),
+             a2 * (refEndNorm * math.cos(projDeg - phi21*pi_half) * math.cos(-self.degNow - phi22*pi_half)) - (r * pos_offset[1]),
+             a3 * (refEndNorm * math.cos(projDeg - phi31*pi_half) * math.cos(-self.degNow - phi32*pi_half)),
+             a4 * (refEndNorm * math.cos(projDeg - phi41*pi_half) * math.cos(-self.degNow - phi42*pi_half))]
 
         return posChange
 
