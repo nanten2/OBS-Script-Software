@@ -278,7 +278,9 @@ class Graphic:
             self.canvas.yview_scroll(int(round(eventy*(scale-1))), 'units')
 
             # Match the bounding box's position to the image
-            self.canvas.moveto("fregion", 0, 0)
+            # self.canvas.moveto("fregion", 0, 0)
+            current_x, current_y, *_ = self.canvas.bbox(self.fits_region)
+            self.canvas.move(self.fits_region, -current_x, -current_y)
 
             # Update image information
             self.fits_CurSize = (int(round(fits_region_bbox[2]-fits_region_bbox[0])),
