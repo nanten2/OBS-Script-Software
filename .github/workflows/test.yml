@@ -47,13 +47,13 @@ jobs:
           poetry install
 
       - name: Compile obs_pS on MacOS
-        if: contains(matrix.os, macos)
+        if: contains(matrix.os, "macos")
         run: |
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
           zip -r obs2.zip dist/
 
       - name: Compile obs_pS on Ubuntu
-        if: contains(matrix.os, ubuntu)
+        if: contains(matrix.os, "ubuntu")
         run: |
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
           zip -r obs2.zip dist/
