@@ -125,8 +125,8 @@ class Graphic:
         if Gvars.curOS == "Linux":
             self.canvas.bind('<Button-4>', lambda event: self.v_scroll(event, delta=120))
             self.canvas.bind('<Button-5>', lambda event: self.v_scroll(event, delta=-120))
-            # self.canvas.bind('<Shift-Button-4>', self.h_scroll)
-            # self.canvas.bind('<Shift-Button-5>', self.h_scroll)
+            self.canvas.bind('<Shift-Button-4>', lambda event: self.h_scroll(event, delta=120))
+            self.canvas.bind('<Shift-Button-5>', lambda event: self.h_scroll(event, delta=-120))
         else:
             self.canvas.bind('<MouseWheel>', self.v_scroll)
             self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
@@ -187,6 +187,8 @@ class Graphic:
         self.fits_zoom(event, zoom=False)
 
     def v_scroll(self, event, delta=None):
+        if delta is not None:
+            event.delta = delta
         self.canvas.yview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
