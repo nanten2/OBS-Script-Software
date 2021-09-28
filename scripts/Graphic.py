@@ -182,7 +182,9 @@ class Graphic:
         elif Gvars.curOS == "Windows" or Gvars.curOS == "Linux":
             self.delta_coeff = 120
 
-    def h_scroll(self, event):
+    def h_scroll(self, event, delta=None):
+        if delta is not None:
+            event.delta = delta
         self.canvas.xview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
