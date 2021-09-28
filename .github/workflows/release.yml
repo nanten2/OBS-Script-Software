@@ -1,0 +1,72 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Compile and Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.*"
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref}}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  build:
+    name: Compile on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    #runs-on: self-hosted
+    needs: release
+    strategy:
+      matrix:
+        os: [ ubuntu-18.04, macos-latest ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          pip3 install poetry
+          poetry install
+
+      - name: Compile obs_pS on MacOS
+        if: contains(matrix.os, 'macos')
+        run: |
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
+          mv dist obs2_${{ matrix.os }}
+          zip -r obs2.zip obs2_${{ matrix.os }}/
+
+      - name: Compile obs_pS on Ubuntu
+        if: contains(matrix.os, 'ubuntu')
+        run: |
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --onefile
+          mv dist obs2_${{ matrix.os }}
+          zip -r obs2.zip obs2_${{ matrix.os }}/
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./obs2.zip
+          asset_name: obs2_${{ matrix.os }}.zip
+          asset_content_type: application/zip

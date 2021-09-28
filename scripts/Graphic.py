@@ -123,10 +123,10 @@ class Graphic:
         self.canvas.bind("<ButtonRelease-1>", self.B1R_callback)
         self.canvas.bind("<ButtonRelease-2>", self.B2R_callback)
         if Gvars.curOS == "Linux":
-            self.canvas.bind('<Button-4>', self.v_scroll)
-            self.canvas.bind('<Shift-Button-5>', self.v_scroll)
-            self.canvas.bind('<Shift-Button-4>', self.h_scroll)
-            self.canvas.bind('<Shift-Button-5>', self.h_scroll)
+            self.canvas.bind('<Button-4>', lambda event: self.v_scroll(event, delta=120))
+            self.canvas.bind('<Button-5>', lambda event: self.v_scroll(event, delta=-120))
+            self.canvas.bind('<Shift-Button-4>', lambda event: self.h_scroll(event, delta=120))
+            self.canvas.bind('<Shift-Button-5>', lambda event: self.h_scroll(event, delta=-120))
         else:
             self.canvas.bind('<MouseWheel>', self.v_scroll)
             self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
@@ -135,8 +135,8 @@ class Graphic:
         self.canvas.bind("<Configure>", lambda event, target=self.canvas: self.update_proxy(event, self.canvas))
         self.canvas.bind("<KeyRelease-Meta_L>", lambda event: self.endzoom(event))
         if Gvars.curOS == "Linux":
-            self.canvas.bind("<Command-Button-4>", lambda event: self.fits_zoom(event))
-            self.canvas.bind("<Command-Button-5>", lambda event: self.fits_zoom(event))
+            self.canvas.bind("<Control-Button-4>", lambda event: self.fits_zoom(event, delta=120))
+            self.canvas.bind("<Control-Button-5>", lambda event: self.fits_zoom(event, delta=-120))
         else:
             self.canvas.bind("<Command-MouseWheel>", lambda event: self.fits_zoom(event))
 
@@ -182,11 +182,15 @@ class Graphic:
         elif Gvars.curOS == "Windows" or Gvars.curOS == "Linux":
             self.delta_coeff = 120
 
-    def h_scroll(self, event):
+    def h_scroll(self, event, delta=None):
+        if delta is not None:
+            event.delta = delta
         self.canvas.xview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
-    def v_scroll(self, event):
+    def v_scroll(self, event, delta=None):
+        if delta is not None:
+            event.delta = delta
         self.canvas.yview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
@@ -207,7 +211,7 @@ class Graphic:
         # Add binding for window resize
         self.canvas.bind("<Configure>", lambda event: self.fits_zoom(event), add="+")
 
-    def fits_zoom(self, event, zoom=True):
+    def fits_zoom(self, event, zoom=True, delta=None):
         """Handles zooming and scrolling of the zoomed image."""
         if zoom:
             # Obtain cursor position on the canvas
@@ -217,6 +221,9 @@ class Graphic:
             rx, ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
             cx, cy = (px-rx, py-ry)
             eventx, eventy = self.canvas.canvasx(cx), self.canvas.canvasy(cy)
+
+            if delta is not None:
+                event.delta = delta
 
             # Set current and overall scaling factor
             scale = 1 - event.delta * 0.01 / self.delta_coeff
@@ -271,7 +278,11 @@ class Graphic:
             self.canvas.yview_scroll(int(round(eventy*(scale-1))), 'units')
 
             # Match the bounding box's position to the image
-            self.canvas.moveto("fregion", 0, 0)
+            current_x, current_y, *_ = self.canvas.bbox(self.fits_region)
+            self.canvas.move(self.fits_region, -current_x, -current_y)
+            # When Tcl/Tk 8.6 is available on GitHub Actions, the following line should
+            # be used instead of the preceding 2 lines.
+            # self.canvas.moveto("fregion", 0, 0)
 
             # Update image information
             self.fits_CurSize = (int(round(fits_region_bbox[2]-fits_region_bbox[0])),
@@ -520,16 +531,16 @@ class Graphic:
             self.resizeFill = ""
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NWPos[0] - 6, NWPos[1] + 5, NWPos[0] + 5, NWPos[1] - 6,
-                                    width=0, fill="orange", tag=("O", "resize", "resize" + id_str, "C", "NW")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NEPos[0] - 6, NEPos[1] + 5, NEPos[0] + 5, NEPos[1] - 6,
-                                    width=0, fill="yellow", tag=("O", "resize", "resize" + id_str, "C", "NE")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SEPos[0] - 6, SEPos[1] + 5, SEPos[0] + 5, SEPos[1] - 6,
-                                    width=0, fill="lime", tag=("O", "resize", "resize" + id_str, "C", "SE")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SWPos[0] - 6, SWPos[1] + 5, SWPos[0] + 5, SWPos[1] - 6,
-                                    width=0, fill="cyan", tag=("O", "resize", "resize" + id_str, "C", "SW")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(UPos[0] - 6, UPos[1] + 5, UPos[0] + 5, UPos[1] - 6,
                                     width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + id_str, "UD", "U")))
@@ -553,7 +564,7 @@ class Graphic:
             self.canvas.tag_bind("all", "<Button-1>", lambda event: self.manipBox_callback(event))
             self.canvas.tag_bind("C", "<Button-2>", lambda event: self.manipBox_callback(event))
 
-            self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
+            # self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("C", "<Leave>", lambda event, mode="default": self.cursors(event, mode))
             self.canvas.tag_bind("all", "<Leave>", lambda event, mode="default": self.cursors(event, mode))
 
@@ -574,6 +585,7 @@ class Graphic:
 
             self.canvas.tag_bind("C", "<Enter>", lambda event, mode="hand": self.cursors(event, mode))
             self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
+            self.canvas.tag_bind("C", "<B3-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<B1-Motion>", lambda event, mode=("NW", "free"): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<Shift-B1-Motion>", lambda event, mode=("NW", "ratio"): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<Double-Button-1>", lambda event, corner=0, manual=True: self.set_onpos(event, corner, manual))
@@ -750,7 +762,7 @@ class Graphic:
         try:
             # Manipulate box
             self.manipulateBox(event, kwargs["mode"], *self.manipBox_initvars)
-        except KeyError:
+        except (KeyError, AttributeError):
             # Initiliaze manipulation
             if self.over_selected:
                 try:
