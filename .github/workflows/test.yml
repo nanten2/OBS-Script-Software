@@ -34,7 +34,7 @@ jobs:
     needs: release
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-18.04, macos-10.15 ]
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python
