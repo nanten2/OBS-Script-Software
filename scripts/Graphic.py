@@ -751,7 +751,7 @@ class Graphic:
         try:
             # Manipulate box
             self.manipulateBox(event, kwargs["mode"], *self.manipBox_initvars)
-        except KeyError:
+        except (KeyError, AttributeError):
             # Initiliaze manipulation
             if self.over_selected:
                 try:
