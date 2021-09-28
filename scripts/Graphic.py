@@ -520,16 +520,16 @@ class Graphic:
             self.resizeFill = ""
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NWPos[0] - 6, NWPos[1] + 5, NWPos[0] + 5, NWPos[1] - 6,
-                                    width=0, fill="orange", tag=("O", "resize", "resize" + id_str, "C", "NW")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(NEPos[0] - 6, NEPos[1] + 5, NEPos[0] + 5, NEPos[1] - 6,
-                                    width=0, fill="yellow", tag=("O", "resize", "resize" + id_str, "C", "NE")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "NE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SEPos[0] - 6, SEPos[1] + 5, SEPos[0] + 5, SEPos[1] - 6,
-                                    width=0, fill="lime", tag=("O", "resize", "resize" + id_str, "C", "SE")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SE")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(SWPos[0] - 6, SWPos[1] + 5, SWPos[0] + 5, SWPos[1] - 6,
-                                    width=0, fill="cyan", tag=("O", "resize", "resize" + id_str, "C", "SW")))
+                                    width=0, fill="", tag=("O", "resize", "resize" + id_str, "C", "SW")))
             self.Box[self.box_index].append(
                 self.canvas.create_oval(UPos[0] - 6, UPos[1] + 5, UPos[0] + 5, UPos[1] - 6,
                                     width=0, fill=self.resizeFill, tag=("O", "resize", "resize" + id_str, "UD", "U")))
