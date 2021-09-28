@@ -53,14 +53,14 @@ jobs:
         run: |
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
           mv dist obs2_${{ matrix.os }}
-          zip -r obs2.zip dist/
+          zip -r obs2.zip obs2_${{ matrix.os }}/
 
       - name: Compile obs_pS on Ubuntu
         if: contains(matrix.os, 'ubuntu')
         run: |
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --onefile
           mv dist obs2_${{ matrix.os }}
-          zip -r obs2.zip dist/
+          zip -r obs2.zip obs2_${{ matrix.os }}/
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
