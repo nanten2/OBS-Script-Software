@@ -56,7 +56,7 @@ jobs:
       - name: Compile obs_pS on Ubuntu
         if: contains(matrix.os, 'ubuntu')
         run: |
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --onefile
           zip -r obs2.zip dist/
 
       - name: Upload Release Asset
