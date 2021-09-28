@@ -37,10 +37,11 @@ jobs:
         os: [ ubuntu-18.04, macos-latest ]
     steps:
       - uses: actions/checkout@v2
+
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8.5
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -50,14 +51,15 @@ jobs:
       - name: Compile obs_pS on MacOS
         if: contains(matrix.os, 'macos')
         run: |
-          brew upgrade tcl-tk
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
+          mv dist obs2_${{ matrix.os }}
           zip -r obs2.zip dist/
 
       - name: Compile obs_pS on Ubuntu
         if: contains(matrix.os, 'ubuntu')
         run: |
           poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --onefile
+          mv dist obs2_${{ matrix.os }}
           zip -r obs2.zip dist/
 
       - name: Upload Release Asset
@@ -65,7 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}  # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./obs2.zip
           asset_name: obs2_${{ matrix.os }}.zip
           asset_content_type: application/zip
