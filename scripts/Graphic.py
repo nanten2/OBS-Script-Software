@@ -278,9 +278,11 @@ class Graphic:
             self.canvas.yview_scroll(int(round(eventy*(scale-1))), 'units')
 
             # Match the bounding box's position to the image
-            # self.canvas.moveto("fregion", 0, 0)
             current_x, current_y, *_ = self.canvas.bbox(self.fits_region)
             self.canvas.move(self.fits_region, -current_x, -current_y)
+            # When Tcl/Tk 8.6 is available on GitHub Actions, the following line should
+            # be used instead of the preceding 2 lines.
+            # self.canvas.moveto("fregion", 0, 0)
 
             # Update image information
             self.fits_CurSize = (int(round(fits_region_bbox[2]-fits_region_bbox[0])),
