@@ -553,7 +553,7 @@ class Graphic:
             self.canvas.tag_bind("all", "<Button-1>", lambda event: self.manipBox_callback(event))
             self.canvas.tag_bind("C", "<Button-2>", lambda event: self.manipBox_callback(event))
 
-            self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
+            # self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("C", "<Leave>", lambda event, mode="default": self.cursors(event, mode))
             self.canvas.tag_bind("all", "<Leave>", lambda event, mode="default": self.cursors(event, mode))
 
@@ -574,6 +574,7 @@ class Graphic:
 
             self.canvas.tag_bind("C", "<Enter>", lambda event, mode="hand": self.cursors(event, mode))
             self.canvas.tag_bind("C", "<B2-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
+            self.canvas.tag_bind("C", "<B3-Motion>", lambda event, mode=("rotate", None): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<B1-Motion>", lambda event, mode=("NW", "free"): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<Shift-B1-Motion>", lambda event, mode=("NW", "ratio"): self.manipBox_callback(event, mode=mode))
             self.canvas.tag_bind("NW", "<Double-Button-1>", lambda event, corner=0, manual=True: self.set_onpos(event, corner, manual))
