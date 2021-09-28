@@ -123,10 +123,10 @@ class Graphic:
         self.canvas.bind("<ButtonRelease-1>", self.B1R_callback)
         self.canvas.bind("<ButtonRelease-2>", self.B2R_callback)
         if Gvars.curOS == "Linux":
-            self.canvas.bind('<Button-4>', self.v_scroll)
-            self.canvas.bind('<Shift-Button-5>', self.v_scroll)
-            self.canvas.bind('<Shift-Button-4>', self.h_scroll)
-            self.canvas.bind('<Shift-Button-5>', self.h_scroll)
+            self.canvas.bind('<Button-4>', lambda event: self.v_scroll(event, delta=120))
+            self.canvas.bind('<Button-5>', lambda event: self.v_scroll(event, delta=-120))
+            # self.canvas.bind('<Shift-Button-4>', self.h_scroll)
+            # self.canvas.bind('<Shift-Button-5>', self.h_scroll)
         else:
             self.canvas.bind('<MouseWheel>', self.v_scroll)
             self.canvas.bind('<Shift-MouseWheel>', self.h_scroll)
@@ -135,8 +135,8 @@ class Graphic:
         self.canvas.bind("<Configure>", lambda event, target=self.canvas: self.update_proxy(event, self.canvas))
         self.canvas.bind("<KeyRelease-Meta_L>", lambda event: self.endzoom(event))
         if Gvars.curOS == "Linux":
-            self.canvas.bind("<Command-Button-4>", lambda event: self.fits_zoom(event))
-            self.canvas.bind("<Command-Button-5>", lambda event: self.fits_zoom(event))
+            self.canvas.bind("<Control-Button-4>", lambda event: self.fits_zoom(event, delta=120))
+            self.canvas.bind("<Control-Button-5>", lambda event: self.fits_zoom(event, delta=-120))
         else:
             self.canvas.bind("<Command-MouseWheel>", lambda event: self.fits_zoom(event))
 
@@ -186,7 +186,7 @@ class Graphic:
         self.canvas.xview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
-    def v_scroll(self, event):
+    def v_scroll(self, event, delta=None):
         self.canvas.yview_scroll(int(-3 * event.delta / self.delta_coeff), 'units')
         self.fits_zoom(event, zoom=False)
 
@@ -207,7 +207,7 @@ class Graphic:
         # Add binding for window resize
         self.canvas.bind("<Configure>", lambda event: self.fits_zoom(event), add="+")
 
-    def fits_zoom(self, event, zoom=True):
+    def fits_zoom(self, event, zoom=True, delta=None):
         """Handles zooming and scrolling of the zoomed image."""
         if zoom:
             # Obtain cursor position on the canvas
@@ -217,6 +217,9 @@ class Graphic:
             rx, ry = (event.widget.winfo_rootx(), event.widget.winfo_rooty())
             cx, cy = (px-rx, py-ry)
             eventx, eventy = self.canvas.canvasx(cx), self.canvas.canvasy(cy)
+
+            if delta is not None:
+                event.delta = delta
 
             # Set current and overall scaling factor
             scale = 1 - event.delta * 0.01 / self.delta_coeff
