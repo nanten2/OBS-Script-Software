@@ -26,7 +26,7 @@ class InitDialog:
         newButton = ttk.Button(InitFrame, text="New", takefocus=0, command=self.init_new)
         newButton.grid(row=0, column=0, sticky="nsew")
 
-        print(f"obs_pS, running on Tcl/Tk{tk.TkVersion}")
+        print(f"obs_pS, running on Tcl/Tk {tk.TkVersion}")
 
     def init_new(self):
         """Create an instance of MainApplication."""
