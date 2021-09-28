@@ -50,7 +50,7 @@ jobs:
       - name: Compile obs_pS on MacOS
         if: contains(matrix.os, 'macos')
         run: |
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
+          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --add-data='/System/Library/Frameworks/Tk.framework/Resources/Scripts':'tk' --add-data='/System/Library/Frameworks/Tcl.framework/Resources/Scripts':'tcl' --add-data='/System/Library/Frameworks/Tcl.framework/Resources/tcl8':'tcl8'
           zip -r obs2.zip dist/
 
       - name: Compile obs_pS on Ubuntu
