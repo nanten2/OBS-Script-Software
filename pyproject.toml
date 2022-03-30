@@ -11,6 +11,7 @@ colour = "^0.1.5"
 numpy = "^1.18.5"
 Pillow = "^8.0.1"
 pyregion = "^2.0"
+n_const = "^1.0.4"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "4.3.0"
