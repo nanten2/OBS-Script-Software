@@ -6,7 +6,7 @@ authors = ["Jeremy"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.7, <3.9"
+python = ">=3.8, <3.9"
 astropy = ">=3.0, <6.0"
 colour = "^0.1.5"
 n_const = "^1.0.4"
@@ -15,7 +15,7 @@ Pillow = "^9.0.1"
 pyregion = "^2.0"
 
 [tool.poetry.dev-dependencies]
-pyinstaller = "4.3.0"
+pyinstaller = "^4.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
