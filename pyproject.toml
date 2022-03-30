@@ -6,12 +6,13 @@ authors = ["Jeremy"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.6, <3.9"
+python = ">=3.7, <3.9"
+astropy = ">=3.0, <6.0"
 colour = "^0.1.5"
-numpy = "^1.18.5"
-Pillow = "^8.0.1"
-pyregion = "^2.0"
 n_const = "^1.0.4"
+numpy = "^1.21.5"
+Pillow = "^9.0.1"
+pyregion = "^2.0"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "4.3.0"
