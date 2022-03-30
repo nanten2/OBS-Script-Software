@@ -74,7 +74,7 @@ class MainApplication:
         mainFrame.grid_columnconfigure(0, weight=3)
 
         # Frame for the right side (Canvas, quickoptions, ...)
-        mainFrame_g = tk.Frame(master, bg="#eaeaea")
+        mainFrame_g = tk.Frame(master)
         mainFrame_g.grid(row=0, column=2, sticky="nsew")
         mainFrame_g.grid_rowconfigure(0, weight=1)
         mainFrame_g.grid_columnconfigure(0, weight=1)

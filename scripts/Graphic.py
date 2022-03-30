@@ -414,7 +414,7 @@ class Graphic:
         """
         f1 = pixel_min
         f4 = pixel_max
-        if mode == "　Symmetric":
+        if mode == "Symmetric":
             bias_sep_x = lowerb + (bias_x * (upperb - lowerb))
             bias_sep_y = pixel_min + (bias_y * (pixel_max - pixel_min))
             bound_diff = upperb - lowerb
@@ -423,7 +423,7 @@ class Graphic:
             f3 = lambda pixel: (((pixel-bias_sep_x)/(0.5*bound_diff))**gamma)*(0.5*global_diff)*gain + bias_sep_y
             return np.piecewise(pixel, [(pixel<lowerb), (lowerb<=pixel)*(pixel<bias_sep_x),
                                         (bias_sep_x<=pixel)*(pixel<=upperb),(upperb<pixel)], [f1, f2, f3, f4])
-        elif mode == "　Regular　":
+        elif mode == "Regular":
             bias_sep_x = lowerb + ((bias_x-0.5) * (upperb - lowerb))
             bias_sep_y = pixel_min + ((bias_y-0.5) * (pixel_max - pixel_min))
             bound_diff = upperb - lowerb
