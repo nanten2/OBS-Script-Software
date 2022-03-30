@@ -1,3 +1,5 @@
+from n_const import REST_FREQ
+
 class Parameters:
     """List of parameters to be parsed and have widgets created for in FileEdit.Files.setup_obs_frame().
 
@@ -32,7 +34,7 @@ class Parameters:
         self.paramlist.append(["observation_property", [
             {"name": "OBSERVER", "#": "name of observer", "string": True, "no.": 1},
             {"name": "OBJECT", "#": "name of target object", "string": True, "no.": 2},
-            {"name": "MOLECULE_1", "#": "line identifier of target molecule", "string": True, "no.": 3}
+            {"name": "MOLECULE_1", "#": "line identifier of target molecule", "string": True, "no.": 3, "values": REST_FREQ.keys()}
         ]])
         self.paramlist.append(["coordinate", [
             {"name": "LambdaOn", "#": "x-coordinate of map center (degree)", "string": True, "grid": (1,0), "no.": 1},
