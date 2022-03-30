@@ -94,8 +94,8 @@ class Files:
         self.mainFrame_g.grid_columnconfigure([0], weight=1)
 
         # Double up frames in the OBS tab to enable better padding for the notebook widget
-        obs_tab_base = tk.Frame(self.notebook, padx=9, pady=0, bg='#fafafa')
-        obs_tab = tk.Frame(obs_tab_base, bg='#fafafa')
+        obs_tab_base = tk.Frame(self.notebook, padx=9, pady=0)
+        obs_tab = tk.Frame(obs_tab_base)
         obs_tab.grid(row=0, column=0, pady=(0, 9))
 
         # FITS tab frame
@@ -113,17 +113,17 @@ class Files:
         for i in range(len(self.paramlist)):
             self.Frames["obstab"].append(tk.LabelFrame(obs_tab,
                                                        labelwidget=tk.Label(obs_tab, text=self.paramlist[i][0],
-                                                                            font="Calibri 9", bg='#fafafa'),
-                                                       bg='#fafafa', padx=3, pady=3))
+                                                                            font="Calibri 9"),
+                                                       padx=3, pady=3))
             self.Frames["obstab"][-1].grid(row=i, column=0, columnspan=3, sticky="nsew")
-        self.Frames["fitstab"] = tk.Frame(fits_tab, bg='#fafafa', padx=3, pady=3)
+        self.Frames["fitstab"] = tk.Frame(fits_tab, padx=3, pady=3)
         self.Frames["fitstab"].grid(row=0, column=0, sticky="nsew")
 
         # Create relevant frames for the canvas, quickotions
-        self.Frames["canvas"] = tk.Frame(self.mainFrame_g, bg='#ececec', padx=3, pady=3)
+        self.Frames["canvas"] = tk.Frame(self.mainFrame_g, padx=3, pady=3)
         self.Frames["canvas"].grid(row=0, rowspan=1, column=0, sticky="nsew")
         ttk.Separator(self.mainFrame_g, orient="vertical").grid(row=0, rowspan=1, column=1, sticky="nsew")
-        self.Frames["quickoptions"] = tk.Frame(self.mainFrame_g, bg='#fafafa', padx=3, pady=3)
+        self.Frames["quickoptions"] = tk.Frame(self.mainFrame_g, padx=3, pady=3)
         self.Frames["quickoptions"].grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
         ttk.Separator(self.mainFrame_g, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="nsew")
 
@@ -160,13 +160,13 @@ class Files:
                         # This is to deal with some issue with tkinter where the text is out of bounds to the left
                         temp_values.append("   " + option)
                     self.entry_list[f_num][2].append(tk.OptionMenu(frame, self.entry_list[f_num][1][i], *temp_values))
-                    self.entry_list[f_num][2][i].config(font=font, anchor="nw", bg='#fafafa')
+                    self.entry_list[f_num][2][i].config(font=font, anchor="nw", bd=3)
                     self.entry_list[f_num][2][i].bind("<Button-1>", lambda event: self.master.focus_set())
                     self.entry_list[f_num][1][i].set(temp_values[0])
                     def_offset = "   "
                 except KeyError:
                     self.entry_list[f_num][2].append(tk.Entry(frame, textvariable=self.entry_list[f_num][1][i],
-                                                              font=font, highlightbackground='#fafafa'))
+                                                              font=font, disabledbackground="#d3cfd9", bd=3))
                     def_offset = 0
                 # Check for default value
                 try:
@@ -175,7 +175,7 @@ class Files:
                     pass
 
                 # Create tk.Label widgets and bind it to defocus entries
-                label_list.append(tk.Label(frame, text=self.entry_list[f_num][0][i], font=font, bg='#fafafa'))
+                label_list.append(tk.Label(frame, text=self.entry_list[f_num][0][i], font=font))
                 label_list[-1].bind("<Button-1>", lambda event: self.master.focus_set())
 
                 # Check for grid keyword in paramlist, if not present arrange in order
@@ -210,10 +210,10 @@ class Files:
         style.configure('my.Horizontal.TScale', background='#fafafa', foreground='black')
 
         # Create scales and set default
-        type_ddbox = tk.OptionMenu(fitstabframe, self.scale_var[0], "　Regular　", "　Symmetric")
-        type_ddbox.config(bg="#fafafa", anchor="w", font="Calibri 9", width=6)
+        type_ddbox = tk.OptionMenu(fitstabframe, self.scale_var[0], "Regular", "Symmetric")
+        type_ddbox.config(anchor="w", font="Calibri 9", width=6)
         type_ddbox.grid(row=0, column=0)
-        self.scale_var[0].set("　Regular　")
+        self.scale_var[0].set("Regular")
         self.scale_var[0].trace("w", self.slider_callback)
 
         pixelmin = round(np.min(self.grph.fitsNp_ori), 1)
@@ -231,13 +231,13 @@ class Files:
     def generate_sliders_fitstab(self, variable, row, default, from_, to, label="", resolution=0.0001):
         """Create a FITS tab slider with label."""
         font = "Calibri 9"
-        label = tk.Label(self.Frames["fitstab"], text=label, font=font, bg="#fafafa")
+        label = tk.Label(self.Frames["fitstab"], text=label, font=font)
         label.bind("<Button-1>", lambda event: self.master.focus_set())
         label.grid(row=row, column=0, sticky="ew")
         tk.Scale(self.Frames["fitstab"], from_=from_, to=to, orient="horizontal", variable=variable,
-                 showvalue=0, resolution=resolution, repeatdelay=0, troughcolor="#fafafa",
+                 showvalue=0, resolution=resolution, repeatdelay=0, troughcolor="#e7e7eb",
                  command=self.slider_callback).grid(row=row, column=1, sticky="ew")
-        entry = tk.Entry(self.Frames["fitstab"], textvariable=variable, font=font, highlightbackground="#fafafa", width=6)
+        entry = tk.Entry(self.Frames["fitstab"], textvariable=variable, font=font, bd=3, width=6)
         entry.grid(row=row, column=2, sticky="e")
         variable.set(default)
         variable.trace("w", lambda t1, t2, t3, entry=entry: self.slider_trace_callback(entry))
