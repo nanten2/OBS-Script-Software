@@ -111,10 +111,11 @@ class Files:
         self.Frames = {}
         self.Frames["obstab"] = []
         for i in range(len(self.paramlist)):
-            self.Frames["obstab"].append(tk.LabelFrame(obs_tab,
-                                                       labelwidget=tk.Label(obs_tab, text=self.paramlist[i][0],
-                                                                            font="Calibri 9"),
-                                                       padx=3, pady=3))
+            self.Frames["obstab"].append(tk.LabelFrame(
+                obs_tab,
+                labelwidget=tk.Label(obs_tab, text=self.paramlist[i][0], font="Calibri 9"),
+                padx=3,
+                pady=3))
             self.Frames["obstab"][-1].grid(row=i, column=0, columnspan=3, sticky="nsew")
         self.Frames["fitstab"] = tk.Frame(fits_tab, padx=3, pady=3)
         self.Frames["fitstab"].grid(row=0, column=0, sticky="nsew")
@@ -207,7 +208,7 @@ class Files:
                           tk.DoubleVar()]
 
         style = ttk.Style(self.master)
-        style.configure('my.Horizontal.TScale', background='#fafafa', foreground='black')
+        style.configure('my.Horizontal.TScale', foreground='black')
 
         # Create scales and set default
         type_ddbox = tk.OptionMenu(fitstabframe, self.scale_var[0], "Regular", "Symmetric")
@@ -235,7 +236,7 @@ class Files:
         label.bind("<Button-1>", lambda event: self.master.focus_set())
         label.grid(row=row, column=0, sticky="ew")
         tk.Scale(self.Frames["fitstab"], from_=from_, to=to, orient="horizontal", variable=variable,
-                 showvalue=0, resolution=resolution, repeatdelay=0, troughcolor="#e7e7eb",
+                 showvalue=0, resolution=resolution, repeatdelay=0,
                  command=self.slider_callback).grid(row=row, column=1, sticky="ew")
         entry = tk.Entry(self.Frames["fitstab"], textvariable=variable, font=font, bd=3, width=6)
         entry.grid(row=row, column=2, sticky="e")
@@ -409,17 +410,18 @@ class Files:
         if self.fits_sys == "fk4":
             self.fits_sys = FK4(equinox="B1950")
         img_array = fits.getdata(self.grph.FITSpath, ext=0)
-        for i in range(fits.open(self.grph.FITSpath)[0].header["NAXIS"] - 2):
+        for _ in range(fits.open(self.grph.FITSpath)[0].header["NAXIS"] - 2):
             [img_array] = img_array.copy()
         self.grph.fitsNp_ori = img_array
 
         print(img_array.dtype.name)
-        if False:
-            if img_array.dtype.name == "int16":
-                lut = np.linspace(1 / (2 ** 16), 255, 2 ** 16).astype(np.uint16)
-                img_array = lut[img_array].astype(np.uint8)
-            elif img_array.dtype.name == "float32":
-                img_array = (img_array / np.max(img_array) + 0.000001) * 255
+        # Unnecessary?
+        # if False:
+        #     if img_array.dtype.name == "int16":
+        #         lut = np.linspace(1 / (2 ** 16), 255, 2 ** 16).astype(np.uint16)
+        #         img_array = lut[img_array].astype(np.uint8)
+        #     elif img_array.dtype.name == "float32":
+        #         img_array = (img_array / np.max(img_array) + 0.000001) * 255
 
         img_array = (img_array / np.max(img_array) + 0.000001) * 255
 
@@ -430,12 +432,16 @@ class Files:
 
         self.grph.fitsNp = img_array
         self.grph.fits_initialize(Image.fromarray(np.flip(img_array, 0)))
-        self.grph.canvas.config(xscrollcommand=self.grph.hbar.set, yscrollcommand=self.grph.vbar.set,
-                                scrollregion=self.grph.canvas.bbox("all"))
+        self.grph.canvas.config(
+            xscrollcommand=self.grph.hbar.set,
+            yscrollcommand=self.grph.vbar.set,
+            scrollregion=self.grph.canvas.bbox("all"))
 
         self.master.update()
-        (cv_w, cv_h, im_w, im_h) = (self.grph.canvas.winfo_width() - 1, self.grph.canvas.winfo_height() - 1,
-                                    self.grph.fitsPIL.size[0], self.grph.fitsPIL.size[1])
+        (cv_w, cv_h, im_w, im_h) = (
+            self.grph.canvas.winfo_width() - 1,
+            self.grph.canvas.winfo_height() - 1,
+            self.grph.fitsPIL.size[0], self.grph.fitsPIL.size[1])
         self.grph.canvas.xview_moveto((im_w - cv_w) / im_w / 2)
         self.grph.canvas.yview_moveto((im_h - cv_h) / im_h / 2)
         self.grph.canvas.tag_raise("O")
@@ -447,8 +453,11 @@ class Files:
 
     def openREG(self):
         """Load a pyregion file and draw the boxes on the tkinter.Canvas instance."""
-        paths_list = filedialog.askopenfilenames(parent=self.master, initialdir=os.getcwd,
-                                                 title='Load ds9 Region File...', filetypes=[("REG files", "*.reg")])
+        paths_list = filedialog.askopenfilenames(
+            parent=self.master,
+            initialdir=os.getcwd,
+            title='Load ds9 Region File...',
+            filetypes=[("REG files", "*.reg")])
         reg = pyregion.open(paths_list[0])
         self.fits_WCS = WCS(fits.open(self.grph.FITSpath)[0].header)
 
@@ -458,13 +467,15 @@ class Files:
             xmid, ymid = self.fits_WCS.world_to_pixel(
                 SkyCoord(self.sbox.coord_list[0], self.sbox.coord_list[1], frame=self.sbox.coord_format, unit="deg"))
             x_nw, y_nw = self.fits_WCS.world_to_pixel(
-                SkyCoord(self.sbox.coord_list[0] + self.sbox.coord_list[2] / 2,
-                         self.sbox.coord_list[1] + self.sbox.coord_list[3] / 2,
-                         frame=self.sbox.coord_format, unit="deg"))
+                SkyCoord(
+                    self.sbox.coord_list[0] + self.sbox.coord_list[2] / 2,
+                    self.sbox.coord_list[1] + self.sbox.coord_list[3] / 2,
+                    frame=self.sbox.coord_format, unit="deg"))
             x_se, y_se = self.fits_WCS.world_to_pixel(
-                SkyCoord(self.sbox.coord_list[0] - self.sbox.coord_list[2] / 2,
-                         self.sbox.coord_list[1] - self.sbox.coord_list[3] / 2,
-                         frame=self.sbox.coord_format, unit="deg"))
+                SkyCoord(
+                    self.sbox.coord_list[0] - self.sbox.coord_list[2] / 2,
+                    self.sbox.coord_list[1] - self.sbox.coord_list[3] / 2,
+                    frame=self.sbox.coord_format, unit="deg"))
 
             (x_nw, x_se, xmid) = map(lambda x: x, (x_nw, x_se, xmid))
             (y_nw, y_se, ymid) = map(lambda y: self.grph.canvas.bbox("fits")[3] - y - 1, (y_nw, y_se, ymid))
@@ -529,8 +540,7 @@ class Files:
                     lambet_on = self.fits_WCS.pixel_to_world(box_midx, box_midy)
                     startposx_1 = self.fits_WCS.pixel_to_world(
                         boxPos[self.grph.Box[self.grph.box_index][-1][2]] * scale_ratio[0],
-                        (self.fits_CurSize[1] - 1 - boxPos[self.grph.Box[self.grph.box_index][-1][2] + 1]) *
-                        scale_ratio[1])
+                        (self.fits_CurSize[1] - 1 - boxPos[self.grph.Box[self.grph.box_index][-1][2] + 1]) * scale_ratio[1])
                 elif forangle:
                     # Get the current values of the on position and start position and
                     # calculate the pixel coordiantes of the box center
@@ -539,8 +549,9 @@ class Files:
                     startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
                     starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
                     lambet_on = SkyCoord(lam_new, bet_new, frame=self.obs_sys[-1])
-                    startposx_1 = SkyCoord(Angle(lam_new).to(u.arcsec) + startx_new * u.arcsec,
-                                           Angle(bet_new).to(u.arcsec) + starty_new * u.arcsec, frame=self.obs_sys[-1])
+                    startposx_1 = SkyCoord(
+                        Angle(lam_new).to(u.arcsec) + startx_new * u.arcsec,
+                        Angle(bet_new).to(u.arcsec) + starty_new * u.arcsec, frame=self.obs_sys[-1])
                     box_midx, box_midy = self.fits_WCS.world_to_pixel(lambet_on)
                     ###
                     box_midx, box_midy = box_midx / scale_ratio[0], box_midy / scale_ratio[1]
@@ -674,9 +685,10 @@ class Files:
         self.grph.canvas.bind("<Shift-B4-Motion>", lambda event: self.currentCoords_update(event), add="+")
 
         # Not currently in use
-        self.grph.canvas.bind("<B5-Motion>",
-                              lambda event, disable=False: self.lambet_trace_callback(event, disabletracers=disable),
-                              add="+")
+        self.grph.canvas.bind(
+            "<B5-Motion>",
+            lambda event, disable=False: self.lambet_trace_callback(event, disabletracers=disable),
+            add="+")
 
         #self.coordsys_trace_callback()
         self.tracers_init()
@@ -694,10 +706,11 @@ class Files:
         tuple
            2-tuple of the necessary paramlist indices
         """
-        return [(frame, position)
-                for frame, framelist in enumerate(self.entry_list)
-                for position in range(len(framelist[0]))
-                if self.entry_list[frame][0][position] == name][0]
+        return [
+            (frame, position)
+            for frame, framelist in enumerate(self.entry_list)
+            for position in range(len(framelist[0]))
+            if self.entry_list[frame][0][position] == name][0]
 
     def tracers_init(self):
         """Bind functions to the changes made to the variables."""
@@ -766,13 +779,15 @@ class Files:
 
             # Convert between absolute and relative
             if type(self.obs_sys[sys_index]) is type(Galactic()):
-                off_point_abs = SkyCoord(Angle(off_point_lam) + offset2 * Angle(lambet_new.l.to_string(u.hour)),
-                                         Angle(off_point_bet) + offset2 * Angle(lambet_new.b.to_string(u.degree)),
-                                         frame=self.obs_sys[sys_index])
+                off_point_abs = SkyCoord(
+                    Angle(off_point_lam) + offset2 * Angle(lambet_new.l.to_string(u.hour)),
+                    Angle(off_point_bet) + offset2 * Angle(lambet_new.b.to_string(u.degree)),
+                    frame=self.obs_sys[sys_index])
             elif type(self.obs_sys[sys_index]) is type(FK5(equinox="J2000")) or type(self.obs_sys[sys_index]) is type(FK4(equinox="B1950")):
-                off_point_abs = SkyCoord(Angle(off_point_lam) + offset2 * Angle(lambet_new.ra.to_string(u.hour)),
-                                         Angle(off_point_bet) + offset2 * Angle(lambet_new.dec.to_string(u.degree)),
-                                         frame=self.obs_sys[sys_index])
+                off_point_abs = SkyCoord(
+                    Angle(off_point_lam) + offset2 * Angle(lambet_new.ra.to_string(u.hour)),
+                    Angle(off_point_bet) + offset2 * Angle(lambet_new.dec.to_string(u.degree)),
+                    frame=self.obs_sys[sys_index])
             off_point_abs = off_point_abs.transform_to(self.obs_sys[-1])
             lambet_new = lambet_new.transform_to(self.obs_sys[-1])
 
@@ -820,8 +835,9 @@ class Files:
             starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
 
             lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[0])
-            startpos_new = SkyCoord(Angle(lam_new) + startx_new * u.arcsec,
-                                    Angle(bet_new).to(u.hourangle) + starty_new * u.arcsec, frame=self.obs_sys[0])
+            startpos_new = SkyCoord(
+                Angle(lam_new) + startx_new * u.arcsec,
+                Angle(bet_new).to(u.hourangle) + starty_new * u.arcsec, frame=self.obs_sys[0])
 
             lambet_new = lambet_new.transform_to(self.obs_sys[-1])
             startpos_new = startpos_new.transform_to(self.obs_sys[-1])
@@ -873,8 +889,9 @@ class Files:
 
             # Create the SkyCoord the transform to the FITS coordinate frame
             lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[-1])
-            start_new = SkyCoord(Angle(lam_new) + startx_new * u.arcsec,
-                                 Angle(bet_new).to(u.hourangle) + starty_new * u.arcsec, frame=self.obs_sys[-1])
+            start_new = SkyCoord(
+                Angle(lam_new) + startx_new * u.arcsec,
+                Angle(bet_new).to(u.hourangle) + starty_new * u.arcsec, frame=self.obs_sys[-1])
             lambet_new = lambet_new.transform_to(self.fits_sys)
             start_new = start_new.transform_to(self.fits_sys)
 
@@ -922,17 +939,19 @@ class Files:
 
             # Modify existing box or draw if none exists
             if not self.grph.boxDrawn and not self.grph.box_selected:
-                self.grph.canvas.create_polygon(final[0], y_dim - final[1], final[2], y_dim - final[3],
-                                                final[4], y_dim - final[5], final[6], y_dim - final[7],
-                                                fill="", width=1, outline=self.grph.boxColor, tag="tempbox")
+                self.grph.canvas.create_polygon(
+                    final[0], y_dim - final[1], final[2], y_dim - final[3],
+                    final[4], y_dim - final[5], final[6], y_dim - final[7],
+                    fill="", width=1, outline=self.grph.boxColor, tag="tempbox")
                 self.grph.setBox(None, startxy_c=self.grph.startxy_c)
                 self.grph.selectBox(None, simulate=True)
                 self.grph.set_onpos(None, int(self.grph.startxy_c / 2))
                 self.grph.setBox(None, startxy_c=self.grph.startxy_c)
             elif not self.grph.box_manip and self.grph.box_selected and not self.grph.clicked:
-                self.grph.canvas.coords(self.grph.Box[self.grph.box_index][0],
-                                        final[0], y_dim - final[1], final[2], y_dim - final[3],
-                                        final[4], y_dim - final[5], final[6], y_dim - final[7])
+                self.grph.canvas.coords(
+                    self.grph.Box[self.grph.box_index][0],
+                    final[0], y_dim - final[1], final[2], y_dim - final[3],
+                    final[4], y_dim - final[5], final[6], y_dim - final[7])
                 self.grph.set_onpos(None, int(self.grph.startxy_c / 2))
                 self.grph.setBox(None)
 

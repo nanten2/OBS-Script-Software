@@ -219,7 +219,7 @@ python-versions = ">=3.6"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8, <3.9"
-content-hash = "64aeb926c2098627a9a781ffb93c7a03d1374ca06253bd2e3c487de097f54b30"
+content-hash = "4f346bc1bc9f4279804fdea3cd4e73d9eeaab76398a3fe38f254f205665ebcdb"
 
 [metadata.files]
 altgraph = [
