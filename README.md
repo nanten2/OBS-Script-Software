@@ -2,6 +2,34 @@
 
 Software to create OBS files for the NANTEN2 telescope
 
+## Installation
+
+1. Download the file from release assets
+2. **\[Ubuntu\]** Extract (unzip) the file  
+   **\[MacOS\]** Double click the disk image, move it to Application folder
+3. To launch the app,  
+   **\[Ubuntu\]** hit a command `./path/to/extracted/obs_pS` (working hard to enable double clicking launching)  
+   **\[MacOS\]** Click the obs_pS.app in Launchpad
+
+- `obs2_ubuntu-18.04.zip` supports Ubuntu 18.04+
+- `obs2_macos-latest.dmg` supports MacOS 10.15(Catalina)+
+
+### Command Line Installation
+
+- Ubuntu:
+
+    ```shell
+    # download and install the app:
+    $ curl -L -O https://github.com/nanten2/OBS-Script-Software/releases/latest/download/obs2_ubuntu-18.04.zip
+    $ unzip -q path/to/downloaded/obs2_<OperatingSystem>.zip
+    # then launch it:
+    $ ./path/to/unzipped/obs2_ubuntu-18.04/obs_pS  # on Ubuntu
+    ```
+
+- MacOS
+
+    In preparation...
+
 ## For Developers
 
 - Implementation is documented [here](https://obs-script-software.readthedocs.io/en/latest/).
