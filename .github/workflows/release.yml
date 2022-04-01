@@ -7,9 +7,6 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.*"
-  release:
-    types:
-      - published
 
 jobs:
   release:
@@ -32,7 +29,7 @@ jobs:
   build:
     name: Compile on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    #runs-on: self-hosted
+    # runs-on: self-hosted  # If GitHub hosted machines don't satisfy your needs
     needs: release
     strategy:
       matrix:
@@ -43,7 +40,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -53,23 +50,60 @@ jobs:
       - name: Compile obs_pS on MacOS
         if: contains(matrix.os, 'macos')
         run: |
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns
-          mv dist obs2_${{ matrix.os }}
-          zip -r obs2.zip obs2_${{ matrix.os }}/
-
+          poetry run pyinstaller scripts/obs_pS.py \
+            --noconsole \
+            --hidden-import='PIL._tkinter_finder' \
+            --icon=nt2c.icns
+          rm -r dist/obs_pS
+          # Do not mv dist/obs_pS.app
+          # To prevent the (ad-hoc) codesign-ed app from being damaged
+          echo -e "\033[46;1m===== CODESIGN STATUS =====\033[0m"
+          echo $(codesign --verify --verbose dist/obs_pS.app)
+          echo -e "\033[46;1m===========================\033[0m"
+          # Create Disk Image
+          brew install create-dmg
+          test -f obs_pS.dmg && rm obs_pS.dmg
+          create-dmg \
+            --volname "obs_pS" \
+            --window-pos 200 120 \
+            --window-size 600 300 \
+            --icon-size 100 \
+            --icon "obs_pS.app" 175 120 \
+            --hide-extension "obs_pS.app" \
+            --app-drop-link 425 120 \
+            "obs_pS.dmg" \
+            "dist/"
+          echo -e "\033[46;1m===== CODESIGN STATUS =====\033[0m"
+          echo $(codesign --verify --verbose obs_pS.dmg)
+          echo -e "\033[46;1m===========================\033[0m"
       - name: Compile obs_pS on Ubuntu
         if: contains(matrix.os, 'ubuntu')
         run: |
-          poetry run pyinstaller scripts/obs_pS.py --noconsole --hidden-import='PIL._tkinter_finder' --icon=nt2c.icns --onefile
+          poetry run pyinstaller scripts/obs_pS.py \
+            --noconsole \
+            --hidden-import='PIL._tkinter_finder' \
+            --icon=nt2c.icns \
+            --onefile
           mv dist obs2_${{ matrix.os }}
           zip -r obs2.zip obs2_${{ matrix.os }}/
 
-      - name: Upload Release Asset
+      - name: Upload Release Asset for MacOS
+        if: contains(matrix.os, 'macos')
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./obs2.zip
+          asset_path: obs_pS.dmg
+          asset_name: obs2_${{ matrix.os }}.dmg
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset for Ubuntu
+        if: contains(matrix.os, 'ubuntu')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: obs2.zip
           asset_name: obs2_${{ matrix.os }}.zip
           asset_content_type: application/zip
