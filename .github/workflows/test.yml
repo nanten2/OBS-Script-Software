@@ -1,31 +1,12 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Compile and Release
+name: Test Compile
 
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.*"
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref}}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
-
   build:
     name: Compile on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -92,24 +73,3 @@ jobs:
             --onefile
           mv dist obs2_${{ matrix.os }}
           zip -r obs2.zip obs2_${{ matrix.os }}/
-
-      - name: Upload Release Asset for MacOS x86_64
-        if: contains(matrix.os, 'macos')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: obs_pS${{ matrix.arch }}.dmg
-          asset_name: obs2_${{ matrix.os }}_${{ matrix.arch }}.dmg
-          asset_content_type: application/octet-stream
-      - name: Upload Release Asset for Ubuntu
-        if: contains(matrix.os, 'ubuntu')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: obs2.zip
-          asset_name: obs2_${{ matrix.os }}.zip
-          asset_content_type: application/zip
