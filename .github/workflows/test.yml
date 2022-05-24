@@ -5,19 +5,18 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 jobs:
+
   build:
     name: Compile on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     # runs-on: self-hosted  # If GitHub hosted machines don't satisfy your needs
     strategy:
       matrix:
-        os: [ ubuntu-18.04, macos-latest ]
-        arch: [ x86_64, arm64 ]
-        exclude:
-          - os: ubuntu-18.04
-            arch: arm64
+        os: [ ubuntu-18.04, macos-latest, osx-arm64 ]
     steps:
       - uses: actions/checkout@v2
 
@@ -32,23 +31,21 @@ jobs:
           poetry install
 
       - name: Compile obs_pS on MacOS
-        if: contains(matrix.os, 'macos')
+        if: contains(matrix.os, 'os')
         run: |
           poetry run pyinstaller scripts/obs_pS.py \
             --noconsole \
             --hidden-import='PIL._tkinter_finder' \
-            --icon=nt2c.icns \
-            --target-arch=${{ matrix.arch }} \
-            --distpath=dist_${{ matrix.arch }}
+            --icon=nt2c.icns
           rm -r dist_${{ matrix.arch }}/obs_pS
           # Do not mv obs_pS.app
           # To prevent the (ad-hoc) codesign-ed app from being damaged
           echo -e "\033[46;1m===== CODESIGN STATUS =====\033[0m"
-          echo $(codesign --verify --verbose dist_${{ matrix.arch }}/obs_pS.app)
+          echo $(codesign --verify --verbose dist/obs_pS.app)
           echo -e "\033[46;1m===========================\033[0m"
           # Create Disk Image
           brew install create-dmg
-          test -f obs_pS_${{ matrix.arch }}.dmg && rm obs_pS_${{ matrix.arch }}.dmg
+          test -f obs_pS.dmg && rm obs_pS.dmg
           create-dmg \
             --volname "obs_pS" \
             --window-pos 200 120 \
@@ -57,10 +54,10 @@ jobs:
             --icon "obs_pS.app" 175 120 \
             --hide-extension "obs_pS.app" \
             --app-drop-link 425 120 \
-            obs_pS${{ matrix.arch }}.dmg \
-            dist_${{ matrix.arch }}
+            obs_pS.dmg \
+            dist/
           echo -e "\033[46;1m===== CODESIGN STATUS =====\033[0m"
-          echo $(codesign --verify --verbose obs_pS${{ matrix.arch }}.dmg)
+          echo $(codesign --verify --verbose obs_pS.dmg)
           echo -e "\033[46;1m===========================\033[0m"
       - name: Compile obs_pS on Ubuntu
         if: contains(matrix.os, 'ubuntu')
