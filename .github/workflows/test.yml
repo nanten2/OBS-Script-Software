@@ -37,7 +37,7 @@ jobs:
             --noconsole \
             --hidden-import='PIL._tkinter_finder' \
             --icon=nt2c.icns
-          rm -r dist_${{ matrix.arch }}/obs_pS
+          rm -r dist/obs_pS
           # Do not mv obs_pS.app
           # To prevent the (ad-hoc) codesign-ed app from being damaged
           echo -e "\033[46;1m===== CODESIGN STATUS =====\033[0m"
