@@ -33,7 +33,7 @@ jobs:
     needs: release
     strategy:
       matrix:
-        os: [ ubuntu-18.04, macos-latest, osx-arm64 ]
+        os: [ ubuntu-18.04, macos-latest ]
     steps:
       - uses: actions/checkout@v2
 
