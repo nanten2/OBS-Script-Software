@@ -11,7 +11,7 @@ astropy = ">=5.0.3, <6.0"
 colour = "^0.1.5"
 n_const = "^1.0.4"
 numpy = "^1.21.5"
-Pillow = "^9.0.1"
+Pillow = "^9.3.0"
 pyregion = "^2.0"
 
 [tool.poetry.dev-dependencies]
