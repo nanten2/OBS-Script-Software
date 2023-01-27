@@ -155,7 +155,7 @@ class Files:
                 self.entry_list[f_num][0].append(self.paramlist[f_num][1][i]["name"])
                 self.entry_list[f_num][1].append(tk.StringVar(frame, value=''))
                 # Check for dropdown menu values and use tk.OptionMenu if present, otherwise tk.Entry
-                try:
+                if "values" in self.paramlist[f_num][1][i]:
                     temp_values = []
                     for option in self.paramlist[f_num][1][i]["values"]:
                         # This is to deal with some issue with tkinter where the text is out of bounds to the left
@@ -165,7 +165,7 @@ class Files:
                     self.entry_list[f_num][2][i].bind("<Button-1>", lambda event: self.master.focus_set())
                     self.entry_list[f_num][1][i].set(temp_values[0])
                     def_offset = "   "
-                except KeyError:
+                else:
                     self.entry_list[f_num][2].append(tk.Entry(frame, textvariable=self.entry_list[f_num][1][i],
                                                               font=font, disabledbackground="#d3cfd9", bd=3))
                     def_offset = 0
@@ -270,10 +270,7 @@ class Files:
             "title" : str
                 Name of the new .obs file.
         """
-        try:
-            newtab_title = kwargs["title"]
-        except KeyError:
-            newtab_title = simpledialog.askstring('Open...', 'New OBS file')
+        newtab_title = kwargs.get("title", simpledialog.askstring('Open...', 'New OBS file'))
 
         if not newtab_title.rsplit(".", 1)[-1] == "obs":
             newtab_title += ".obs"
@@ -296,19 +293,18 @@ class Files:
             param = new_tl.param.paramlist
             entry_list = new_tl.Files.entry_list
 
-            obs_file = open(newtab_path, "r")
-            temp_entry = []
-            for script_line in obs_file:
-                temp_entry.append((script_line.rsplit("#", 1)[0]).split(" = ", 1))
+            with open(newtab_path, "r") as obs_file:
+                temp_entry = []
+                for script_line in obs_file:
+                    temp_entry.append((script_line.rsplit("#", 1)[0]).split(" = ", 1))
+
             for frame in range(4):
                 for i in range(len(param[frame][1])):
                     j = 0
                     if param[frame][1][i]["name"] == temp_entry[j][0]:
                         if param[frame][1][i]["string"] and not temp_entry[j][1].rstrip() == "{}":
-                            try:
-                                temp_entry_final = temp_entry[j][1].rstrip()[1:-1 - len(param[frame][1][i]["unit"])]
-                            except KeyError:
-                                temp_entry_final = temp_entry[j][1].rstrip()[1:-1]
+                            unit = param[frame][1][i].get("unit", "")
+                            temp_entry_final = temp_entry[j][1].rstrip()[1:-1 -  len(unit)]
                         else:
                             temp_entry_final = temp_entry[j][1].rstrip()
                         if "values" in param[frame][1][i].keys():
@@ -330,7 +326,6 @@ class Files:
                                 entry_list[frame][1][i].set(temp_entry_final)
                                 break
 
-            obs_file.close()
             new_tl.Files.relative_trace_callback(forceconvert=True)
             new_tl.Files.tracers_init()
 
@@ -348,18 +343,15 @@ class Files:
             for position in range(len(self.paramlist[frame][1])):
                 param_index = [index for index in range(len(self.paramlist[frame][1])) if
                                self.paramlist[frame][1][index]["no."] == position + 1][0]
-                if self.paramlist[frame][1][param_index]["string"] and not self.entry_list[frame][1][
-                                                                               param_index].get().lstrip() == "{}":
-                    try:
-                        temp = self.paramlist[frame][1][param_index]["name"] + " = " + '"' + \
-                               self.entry_list[frame][1][param_index].get().lstrip() + \
-                               self.paramlist[frame][1][param_index]["unit"] + '"'
-                    except KeyError:
-                        temp = self.paramlist[frame][1][param_index]["name"] + " = " + '"' + \
-                               self.entry_list[frame][1][param_index].get().lstrip() + '"'
+                unit = self.paramlist[frame][1][param_index].get("unit", None)
+                param_name = self.paramlist[frame][1][param_index]["name"]
+                value = self.entry_list[frame][1][param_index].get().lstrip()
+                if (unit is not None) and isinstance(value, str) and value:
+                    temp = f"{param_name}[{unit}] = \"{value}\""
+                elif unit is not None:
+                    temp = f"{param_name}[{unit}] = {value or '{}'}"
                 else:
-                    temp = self.paramlist[frame][1][param_index]["name"] + " = " + self.entry_list[frame][1][
-                        param_index].get().lstrip()
+                    temp = f"{param_name} = {value or '{}'}"
 
                 obs_file.writelines(temp.ljust(maxlength + 11))
                 obs_file.writelines("# ")
