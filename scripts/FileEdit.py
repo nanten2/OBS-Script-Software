@@ -13,9 +13,9 @@ from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
 from astropy.wcs import WCS
 from astropy.wcs._wcs import InvalidTransformError
 
-import Gvars
-import MainApp
-from Graphic import Graphic
+from . import Gvars
+from . import MainApp
+from .Graphic import Graphic
 
 
 class Files:

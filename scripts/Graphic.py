@@ -6,7 +6,7 @@ from tkinter import ttk
 from PIL import Image, ImageDraw, ImageTk
 from colour import Color
 
-import Gvars
+from . import Gvars
 
 
 class Graphic:
