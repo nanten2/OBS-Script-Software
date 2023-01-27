@@ -660,13 +660,13 @@ class Files:
         and bind currentCoords_update to some mouse motions.
         """
         self.angle_index = self.setup_cCu_iterator("position_angle")
-        self.lambet_index = self.setup_cCu_iterator("LambdaOn")
-        self.startpos_index = self.setup_cCu_iterator("StartPositionX")
-        self.coordsys_index = self.setup_cCu_iterator("COORD_SYS")
-        self.offabs_index = self.setup_cCu_iterator("LambdaOff")
-        self.offrel_index = self.setup_cCu_iterator("deltaLambda")
-        self.relative_index = self.setup_cCu_iterator("RELATIVE")
-        self.scanDirection_index = self.setup_cCu_iterator("SCAN_DIRECTION")
+        self.lambet_index = self.setup_cCu_iterator("lambda_on")
+        self.startpos_index = self.setup_cCu_iterator("start_position_x")
+        self.coordsys_index = self.setup_cCu_iterator("coord_sys")
+        self.offabs_index = self.setup_cCu_iterator("lambda_off")
+        self.offrel_index = self.setup_cCu_iterator("delta_lambda")
+        self.relative_index = self.setup_cCu_iterator("relative")
+        self.scanDirection_index = self.setup_cCu_iterator("scan_direction")
         self.Nspacing_index = self.setup_cCu_iterator("n")
         self.otf_index = self.setup_cCu_iterator("scan_length")
 
