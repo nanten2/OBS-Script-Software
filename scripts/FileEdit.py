@@ -333,31 +333,31 @@ class Files:
         """Output the current entries as an .obs file."""
         filename = filedialog.asksaveasfilename(initialfile=self.master.title(), defaultextension=".obs",
                                                 filetypes=(("OBS file", "*.obs"), ("All Files", "*.*")))
-        obs_file = open(filename, "w")
-        maxlength = len(max(chain.from_iterable(self.paramlist), key=len)) + len(
-            max(chain.from_iterable(self.entry_list), key=len))
+        with open(filename, "w") as obs_file:
+            maxlength = len(max(chain.from_iterable(self.paramlist), key=len)) + len(
+                max(chain.from_iterable(self.entry_list), key=len))
 
-        for frame in range(len(self.paramlist)):
-            obs_file.writelines("[" + self.paramlist[frame][0] + "]")
-            obs_file.writelines('\n')
-            for position in range(len(self.paramlist[frame][1])):
-                param_index = [index for index in range(len(self.paramlist[frame][1])) if
-                               self.paramlist[frame][1][index]["no."] == position + 1][0]
-                unit = self.paramlist[frame][1][param_index].get("unit", None)
-                param_name = self.paramlist[frame][1][param_index]["name"]
-                value = self.entry_list[frame][1][param_index].get().lstrip()
-                if (unit is not None) and isinstance(value, str) and value:
-                    temp = f"{param_name}[{unit}] = \"{value}\""
-                elif unit is not None:
-                    temp = f"{param_name}[{unit}] = {value or '{}'}"
-                else:
-                    temp = f"{param_name} = {value or '{}'}"
-
-                obs_file.writelines(temp.ljust(maxlength + 11))
-                obs_file.writelines("# ")
-                obs_file.writelines(self.paramlist[frame][1][param_index]["#"])
+            for frame in range(len(self.paramlist)):
+                obs_file.writelines("[" + self.paramlist[frame][0] + "]")
                 obs_file.writelines('\n')
-            obs_file.writelines('\n')
+                for position in range(len(self.paramlist[frame][1])):
+                    param_index = [index for index in range(len(self.paramlist[frame][1])) if
+                                self.paramlist[frame][1][index]["no."] == position + 1][0]
+                    unit = self.paramlist[frame][1][param_index].get("unit", None)
+                    param_name = self.paramlist[frame][1][param_index]["name"]
+                    value = self.entry_list[frame][1][param_index].get().lstrip()
+                    if (unit is not None) and isinstance(value, str) and value:
+                        temp = f"{param_name}[{unit}] = \"{value}\""
+                    elif unit is not None:
+                        temp = f"{param_name}[{unit}] = {value or '{}'}"
+                    else:
+                        temp = f"{param_name} = {value or '{}'}"
+
+                    obs_file.writelines(temp.ljust(maxlength + 11))
+                    obs_file.writelines("# ")
+                    obs_file.writelines(self.paramlist[frame][1][param_index]["#"])
+                    obs_file.writelines('\n')
+                obs_file.writelines('\n')
 
         obs_file.close()
 
