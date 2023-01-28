@@ -24,7 +24,7 @@ class Files:
     Attributes
     ----------
     *_index : tuple
-        Attributes of this naming convention are 2-tuples of their necesasry indices in paramlist
+        Attributes of this naming convention are 2-tuples of their necessary indices in paramlist
     Frames : dict
         Dictionary of frames to be populated in the OBS tab, FITS tab, and graphical component
     entry_list : list
