@@ -54,7 +54,9 @@ class Files:
     tracers : list
     """
 
-    def __init__(self, master, notebook, mainFrame_g, paramlist):
+    def __init__(
+        self, master: tk.Toplevel, notebook: ttk.Notebook, mainFrame_g: tk.Frame, paramlist: list
+    ) -> None:
         """Create the necessary tk.Frame objects, populate the OBS tab, and initialize the graphical component.
 
         Parameters
@@ -88,7 +90,7 @@ class Files:
         self.fits_opened = False
         self.setup_cCu()
 
-    def frames_setup(self):
+    def frames_setup(self) -> None:
         """Create the necessary tk.Frame widgets."""
         self.mainFrame_g.grid_rowconfigure([0], weight=1)
         self.mainFrame_g.grid_columnconfigure([0], weight=1)
@@ -128,7 +130,7 @@ class Files:
         self.Frames["quickoptions"].grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
         ttk.Separator(self.mainFrame_g, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="nsew")
 
-    def fill_obstab(self, obstabframe):
+    def fill_obstab(self, obstabframe: list[tk.LabelFrame]) -> None:
         """Populate the OBS tab with the parameters from paramlist and keep a record of the relevant variables.
 
         Parameters
@@ -140,7 +142,7 @@ class Files:
         font = "Calibri 9"
 
         # Create entry_list to store parameters in sets of [labelframe no.][name, stringvar, widget]
-        self.entry_list = []
+        self.entry_list: list[tuple[list[str], list[tk.StringVar], list[tk.Widget]]] = []
         for i in range(len(self.paramlist)):
             self.entry_list.append([[], [], []])
 
@@ -190,7 +192,7 @@ class Files:
                     label_list[-1].grid(row=i, column=0, sticky="e")
                     self.entry_list[f_num][2][i].grid(row=i, column=1, sticky="ew")
 
-    def fill_fitstab(self, fitstabframe):
+    def fill_fitstab(self, fitstabframe: tk.Frame):
         """Populate the FITS tab.
 
         Parameters
@@ -229,7 +231,9 @@ class Files:
                                       default=pixelmax, resolution=0.1, row=6)
         self.master.focus_set()
 
-    def generate_sliders_fitstab(self, variable, row, default, from_, to, label="", resolution=0.0001):
+    def generate_sliders_fitstab(
+        self, variable, row, default, from_, to, label: str = "", resolution: float = 0.0001
+    ):
         """Create a FITS tab slider with label."""
         font = "Calibri 9"
         label = tk.Label(self.Frames["fitstab"], text=label, font=font)
@@ -243,11 +247,11 @@ class Files:
         variable.set(default)
         variable.trace("w", lambda t1, t2, t3, entry=entry: self.slider_trace_callback(entry))
 
-    def slider_trace_callback(self, entry):
+    def slider_trace_callback(self, entry: tk.Entry) -> None:
         entry.focus_set()
         self.slider_callback()
 
-    def slider_callback(self, *args):
+    def slider_callback(self, *args) -> None:
         """Pass the scaling function's variable values to Graphic.slider_master.
 
         Parameters
@@ -261,7 +265,7 @@ class Files:
             self.scale_var[6].get(), self.scale_var[0].get())
         self.grph.slider_master(vartuple)
 
-    def new(self, **kwargs):
+    def new(self, **kwargs) -> None:
         """Create a new tkinter.Toplevel object.
 
         Parameters:
@@ -279,7 +283,7 @@ class Files:
         Gvars.tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=Gvars.tl_windows[-1]: self.close_tl(tl_id))
         MainApp.MainApplication(Gvars.tl_windows[-1], newtab_title)
 
-    def open(self):
+    def open(self) -> None:
         """Open a .obs file."""
         paths_list = filedialog.askopenfilenames(parent=self.master, initialdir=os.getcwd,
                                                  title='Please select a directory', filetypes=[("OBS files", "*.obs")])
@@ -329,7 +333,7 @@ class Files:
             new_tl.Files.relative_trace_callback(forceconvert=True)
             new_tl.Files.tracers_init()
 
-    def save(self):
+    def save(self) -> None:
         """Output the current entries as an .obs file."""
         filename = filedialog.asksaveasfilename(initialfile=self.master.title(), defaultextension=".obs",
                                                 filetypes=(("OBS file", "*.obs"), ("All Files", "*.*")))
@@ -359,9 +363,7 @@ class Files:
                     obs_file.writelines('\n')
                 obs_file.writelines('\n')
 
-        obs_file.close()
-
-    def openFITS(self):
+    def openFITS(self) -> None:
         """Open a FITS file, convert the image bitmap to 8-bit,
         and pass the PIL.Image object to Graphic.fits_initialize.
         """
@@ -443,7 +445,7 @@ class Files:
         self.currentCoords_update(None, forangle=True)
         self.lambet_trace_callback(None)
 
-    def openREG(self):
+    def openREG(self) -> None:
         """Load a pyregion file and draw the boxes on the tkinter.Canvas instance."""
         paths_list = filedialog.askopenfilenames(
             parent=self.master,
@@ -479,7 +481,9 @@ class Files:
             self.grph.setBox(None, REG=(x1, y1, x2, y2, x3, y3, x4, y4), REGdeg=self.sbox.coord_list[4])
             self.grph.canvas.tag_raise("all")
 
-    def REG_rotate(self, x, y, xmid, ymid, deg):
+    def REG_rotate(
+        self, x: float, y: float, xmid: float, ymid: float, deg: float
+    ) -> tuple[float, float]:
         """Rotate the pyregion box.
 
         Parameters
@@ -504,7 +508,7 @@ class Files:
         xy = complex(x - xmid, y - ymid) * cmath.exp(complex(0, -deg * math.pi / 180))
         return xy.real + xmid + reg_offset[0], xy.imag + ymid + reg_offset[1]
 
-    def currentCoords_update(self, _, forangle=False):
+    def currentCoords_update(self, _, forangle: bool = False) -> None:
         """Update the parameters as the box object of Graphic changes.
 
         Parameters
@@ -647,7 +651,7 @@ class Files:
                 pass
         self.tracers_init()
 
-    def setup_cCu(self):
+    def setup_cCu(self) -> None:
         """Search for necessary indices of the paramaters using setup_cCu_iterator, set their initial states,
         and bind currentCoords_update to some mouse motions.
         """
@@ -685,7 +689,7 @@ class Files:
         #self.coordsys_trace_callback()
         self.tracers_init()
 
-    def setup_cCu_iterator(self, name):
+    def setup_cCu_iterator(self, name: str) -> None:
         """Search for the indices of a parameter in Parameters.paramlist.
 
         Parameters
@@ -704,7 +708,7 @@ class Files:
             for position in range(len(framelist[0]))
             if self.entry_list[frame][0][position] == name][0]
 
-    def tracers_init(self):
+    def tracers_init(self) -> None:
         """Bind functions to the changes made to the variables."""
         self.tracers = [
             [self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]], lambda t1, t2, t3 : self.coordsys_trace_callback()],
@@ -722,7 +726,7 @@ class Files:
             #variable.trace("w", lambda t1, t2, t3, entry=entry: self.slider_trace_callback(entry))
         #self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]].trace("w", lambda t1, t2, t3:self.coordsys_trace_callback())
 
-    def tracers_disable(self):
+    def tracers_disable(self) -> None:
         """Delete all trace binds."""
         try:
             for i, (var, callback, tracer_id) in enumerate(self.tracers):
@@ -731,7 +735,7 @@ class Files:
         except ValueError:
             pass
 
-    def relative_trace_callback(self, forceconvert=False, *args):
+    def relative_trace_callback(self, forceconvert: bool = False, *args) -> None:
         """Convert between relative and absolute coordiantes for the off position.
 
         Parameters
@@ -807,7 +811,7 @@ class Files:
         self.entry_list[active_index[0]][2][active_index[1]].config(state="normal")
         self.entry_list[active_index[0]][2][active_index[1] + 1].config(state="normal")
 
-    def coordsys_trace_callback(self, *args):
+    def coordsys_trace_callback(self, *args) -> None:
         """Convert coordinate values to the chosen frame."""
         # Record change
         coordsys = self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]].get()
@@ -852,7 +856,9 @@ class Files:
             # Convert off position
             self.relative_trace_callback(forceconvert=True)
 
-    def lambet_trace_callback(self, event=None, disabletracers=False, *args):
+    def lambet_trace_callback(
+        self, event: tk.Event | None = None, disabletracers: bool = False, *args
+    ) -> None:
         """Modify box when the relevant quantities are changed.
 
         Parameters
@@ -952,7 +958,7 @@ class Files:
         except ValueError:
             pass
 
-    def scanDirection_trace_callback(self, *args):
+    def scanDirection_trace_callback(self, *args) -> None:
         """Update scan direction record and change the  position of the small circle."""
         try:
             self.scan_direction.append(
@@ -964,7 +970,7 @@ class Files:
         except AttributeError:
             pass
 
-    def Nspacing_trace_callback(self, *args):
+    def Nspacing_trace_callback(self, *args) -> None:
         """Determine the scan_spacing value.
 
         Parameters
@@ -981,7 +987,7 @@ class Files:
         self.entry_list[self.Nspacing_index[0]][1][self.Nspacing_index[1]].set(
             math.ceil(start_sc.separation(end_sc).arcsec / scan_spacing))
 
-    def close_tl(self, tl_id):
+    def close_tl(self, tl_id: tk.Toplevel) -> None:
         """Remove top-level window object id from tl_windows. Destroy root if tl_windows is empty.
 
         Parameters
