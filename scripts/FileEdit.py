@@ -354,6 +354,7 @@ class Files:
 
                     if value.replace(".", "", 1).isdigit():
                         # Convert string input to float value
+                        # NaN or Inf aren't considered
                         value = float(value)
                     if value and (unit is not None):
                         try:
@@ -368,7 +369,7 @@ class Files:
                     elif unit is not None:
                         # Unit specified, but value is non-numerical or empty
                         temp = f'"{param_name}[{unit}]" = {value or "{}"}'
-                    elif isinstance(value, str) and (value not in ["{}", ""]):
+                    elif isinstance(value, str) and (value not in ["{}", "", "true", "false"]):
                         # Value is string
                         temp = f'"{param_name}" = "{value}"'
                     else:
