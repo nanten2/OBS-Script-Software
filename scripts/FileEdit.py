@@ -827,8 +827,8 @@ class Files:
         if self.obs_sys[0] is not None and not self.obs_sys[0] == self.obs_sys[-1]:
             lam_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
             bet_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
-            startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
-            starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
+            startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get() or 0)
+            starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get() or 0)
 
             lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[0])
             startpos_new = SkyCoord(
