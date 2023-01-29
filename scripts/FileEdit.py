@@ -368,8 +368,11 @@ class Files:
                     elif unit is not None:
                         # Unit specified, but value is non-numerical or empty
                         temp = f'"{param_name}[{unit}]" = {value or "{}"}'
+                    elif isinstance(value, str) and (value not in ["{}", ""]):
+                        # Value is string
+                        temp = f'"{param_name}" = "{value}"'
                     else:
-                        # No unit specified
+                        # Value is boolean or empty
                         temp = f"{param_name} = {value or '{}'}"
 
                     obs_file.writelines(temp.ljust(maxlength + 11))
