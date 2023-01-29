@@ -10,6 +10,7 @@ import pyregion
 from astropy import units as u
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
+from astropy.units import UnitConversionError, UnitTypeError
 from astropy.wcs import WCS
 from astropy.wcs._wcs import InvalidTransformError
 
@@ -350,11 +351,25 @@ class Files:
                     unit = self.paramlist[frame][1][param_index].get("unit", None)
                     param_name = self.paramlist[frame][1][param_index]["name"]
                     value = self.entry_list[frame][1][param_index].get().lstrip()
-                    if (unit is not None) and isinstance(value, str) and value:
-                        temp = f"{param_name}[{unit}] = \"{value}\""
+
+                    if value.replace(".", "", 1).isdigit():
+                        # Convert string input to float value
+                        value = float(value)
+                    if value and (unit is not None):
+                        try:
+                            value = Angle(value, unit=unit).to_value(unit)
+                        except (ValueError, UnitConversionError, UnitTypeError):
+                            # Ignore non-angular quantities
+                            pass
+
+                    if (unit is not None) and isinstance(value, str) and (value not in ["{}", ""]):
+                        # Both unit and numerical value specified
+                        temp = f'"{param_name}[{unit}]" = "{value}"'
                     elif unit is not None:
-                        temp = f"{param_name}[{unit}] = {value or '{}'}"
+                        # Unit specified, but value is non-numerical or empty
+                        temp = f'"{param_name}[{unit}]" = {value or "{}"}'
                     else:
+                        # No unit specified
                         temp = f"{param_name} = {value or '{}'}"
 
                     obs_file.writelines(temp.ljust(maxlength + 11))

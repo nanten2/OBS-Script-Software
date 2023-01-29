@@ -36,16 +36,16 @@ class Parameters:
             {"name": "target", "#": "Name of target object", "string": True, "no.": 2},
         ]])
         self.paramlist.append(["coordinate", [
-            {"name": "lambda_on", "#": "X-coordinate of map center", "string": False, "grid": (1,0), "no.": 1},
-            {"name": "beta_on", "#": "Y-coordinate of map center", "string": False, "grid": (2,0), "no.": 2},
+            {"name": "lambda_on", "#": "X-coordinate of map center", "string": False, "unit": "deg", "grid": (1,0), "no.": 1},
+            {"name": "beta_on", "#": "Y-coordinate of map center", "string": False, "unit": "deg", "grid": (2,0), "no.": 2},
             {"name": "relative", "#": "If true, OFF position is given in offset from ON point", "string": False, "grid": (4, 0), "values": ["true", "false"], "default":"true", "no.": 3},
-            {"name": "lambda_off", "#": "OFF point x-coordinate (degree)", "string": False, "grid": (5,0), "no.": 4},
-            {"name": "beta_off", "#": "OFF point y-coordinate (degree)", "string": False, "grid": (6,0), "no.": 5},
-            {"name": "delta_lambda", "#": "offset_off", "string": False, "grid": (5,1), "no.": 6},
-            {"name": "delta_beta", "#": "offset_off", "string": False, "grid": (6,1), "no.": 7},
+            {"name": "lambda_off", "#": "OFF point x-coordinate (degree)", "string": False, "unit": "deg", "grid": (5,0), "no.": 4},
+            {"name": "beta_off", "#": "OFF point y-coordinate (degree)", "string": False, "unit": "deg", "grid": (6,0), "no.": 5},
+            {"name": "delta_lambda", "#": "offset_off", "string": False, "unit": "deg", "grid": (5,1), "no.": 6},
+            {"name": "delta_beta", "#": "offset_off", "string": False, "unit": "deg", "grid": (6,1), "no.": 7},
             {"name": "position_angle", "#": "Position angle of the scan direction (default = 0deg)", "string": False, "unit": "deg", "grid": (3,0), "no.": 8},
-            {"name": "start_position_x", "#": "X start position relative to lambda_on (arcsec) (sw)", "string": False, "unit": "arcsec", "grid": (1,1), "no.": 9},
-            {"name": "start_position_y", "#": "Y start position relative to lambda_on (arcsec) (sw)", "string": False, "unit": "arcsec", "grid": (2,1), "no.": 10},
+            {"name": "start_position_x", "#": "X start position relative to lambda_on (arcsec)", "string": False, "unit": "arcsec", "grid": (1,1), "no.": 9},
+            {"name": "start_position_y", "#": "Y start position relative to lambda_on (arcsec)", "string": False, "unit": "arcsec", "grid": (2,1), "no.": 10},
             {"name": "coord_sys", "#": "(J2000/b1950/galactic/horizontal)", "string": True, "values": ["J2000", "B1950", "Galactic"], "grid": (0,0), "no.": 11},
         ]])
         self.paramlist.append(["scan_property", [
