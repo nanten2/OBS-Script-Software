@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 
-import Gvars
-from FileEdit import Files
-from Parameters import Parameters
+from . import Gvars
+from .FileEdit import Files
+from .Parameters import Parameters
 
 
 class InitDialog:

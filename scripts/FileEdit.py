@@ -10,12 +10,13 @@ import pyregion
 from astropy import units as u
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle, FK4, Galactic, FK5
+from astropy.units import UnitConversionError, UnitTypeError
 from astropy.wcs import WCS
 from astropy.wcs._wcs import InvalidTransformError
 
-import Gvars
-import MainApp
-from Graphic import Graphic
+from . import Gvars
+from . import MainApp
+from .Graphic import Graphic
 
 
 class Files:
@@ -24,7 +25,7 @@ class Files:
     Attributes
     ----------
     *_index : tuple
-        Attributes of this naming convention are 2-tuples of their necesasry indices in paramlist
+        Attributes of this naming convention are 2-tuples of their necessary indices in paramlist
     Frames : dict
         Dictionary of frames to be populated in the OBS tab, FITS tab, and graphical component
     entry_list : list
@@ -54,7 +55,9 @@ class Files:
     tracers : list
     """
 
-    def __init__(self, master, notebook, mainFrame_g, paramlist):
+    def __init__(
+        self, master: tk.Toplevel, notebook: ttk.Notebook, mainFrame_g: tk.Frame, paramlist: list
+    ) -> None:
         """Create the necessary tk.Frame objects, populate the OBS tab, and initialize the graphical component.
 
         Parameters
@@ -88,7 +91,7 @@ class Files:
         self.fits_opened = False
         self.setup_cCu()
 
-    def frames_setup(self):
+    def frames_setup(self) -> None:
         """Create the necessary tk.Frame widgets."""
         self.mainFrame_g.grid_rowconfigure([0], weight=1)
         self.mainFrame_g.grid_columnconfigure([0], weight=1)
@@ -128,7 +131,7 @@ class Files:
         self.Frames["quickoptions"].grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
         ttk.Separator(self.mainFrame_g, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="nsew")
 
-    def fill_obstab(self, obstabframe):
+    def fill_obstab(self, obstabframe: list[tk.LabelFrame]) -> None:
         """Populate the OBS tab with the parameters from paramlist and keep a record of the relevant variables.
 
         Parameters
@@ -140,7 +143,7 @@ class Files:
         font = "Calibri 9"
 
         # Create entry_list to store parameters in sets of [labelframe no.][name, stringvar, widget]
-        self.entry_list = []
+        self.entry_list: list[tuple[list[str], list[tk.StringVar], list[tk.Widget]]] = []
         for i in range(len(self.paramlist)):
             self.entry_list.append([[], [], []])
 
@@ -155,7 +158,7 @@ class Files:
                 self.entry_list[f_num][0].append(self.paramlist[f_num][1][i]["name"])
                 self.entry_list[f_num][1].append(tk.StringVar(frame, value=''))
                 # Check for dropdown menu values and use tk.OptionMenu if present, otherwise tk.Entry
-                try:
+                if "values" in self.paramlist[f_num][1][i]:
                     temp_values = []
                     for option in self.paramlist[f_num][1][i]["values"]:
                         # This is to deal with some issue with tkinter where the text is out of bounds to the left
@@ -165,7 +168,7 @@ class Files:
                     self.entry_list[f_num][2][i].bind("<Button-1>", lambda event: self.master.focus_set())
                     self.entry_list[f_num][1][i].set(temp_values[0])
                     def_offset = "   "
-                except KeyError:
+                else:
                     self.entry_list[f_num][2].append(tk.Entry(frame, textvariable=self.entry_list[f_num][1][i],
                                                               font=font, disabledbackground="#d3cfd9", bd=3))
                     def_offset = 0
@@ -190,7 +193,7 @@ class Files:
                     label_list[-1].grid(row=i, column=0, sticky="e")
                     self.entry_list[f_num][2][i].grid(row=i, column=1, sticky="ew")
 
-    def fill_fitstab(self, fitstabframe):
+    def fill_fitstab(self, fitstabframe: tk.Frame):
         """Populate the FITS tab.
 
         Parameters
@@ -229,7 +232,9 @@ class Files:
                                       default=pixelmax, resolution=0.1, row=6)
         self.master.focus_set()
 
-    def generate_sliders_fitstab(self, variable, row, default, from_, to, label="", resolution=0.0001):
+    def generate_sliders_fitstab(
+        self, variable, row, default, from_, to, label: str = "", resolution: float = 0.0001
+    ):
         """Create a FITS tab slider with label."""
         font = "Calibri 9"
         label = tk.Label(self.Frames["fitstab"], text=label, font=font)
@@ -243,11 +248,11 @@ class Files:
         variable.set(default)
         variable.trace("w", lambda t1, t2, t3, entry=entry: self.slider_trace_callback(entry))
 
-    def slider_trace_callback(self, entry):
+    def slider_trace_callback(self, entry: tk.Entry) -> None:
         entry.focus_set()
         self.slider_callback()
 
-    def slider_callback(self, *args):
+    def slider_callback(self, *args) -> None:
         """Pass the scaling function's variable values to Graphic.slider_master.
 
         Parameters
@@ -261,7 +266,7 @@ class Files:
             self.scale_var[6].get(), self.scale_var[0].get())
         self.grph.slider_master(vartuple)
 
-    def new(self, **kwargs):
+    def new(self, **kwargs) -> None:
         """Create a new tkinter.Toplevel object.
 
         Parameters:
@@ -270,10 +275,7 @@ class Files:
             "title" : str
                 Name of the new .obs file.
         """
-        try:
-            newtab_title = kwargs["title"]
-        except KeyError:
-            newtab_title = simpledialog.askstring('Open...', 'New OBS file')
+        newtab_title = kwargs.get("title", simpledialog.askstring('Open...', 'New OBS file'))
 
         if not newtab_title.rsplit(".", 1)[-1] == "obs":
             newtab_title += ".obs"
@@ -282,7 +284,7 @@ class Files:
         Gvars.tl_windows[-1].protocol("WM_DELETE_WINDOW", lambda tl_id=Gvars.tl_windows[-1]: self.close_tl(tl_id))
         MainApp.MainApplication(Gvars.tl_windows[-1], newtab_title)
 
-    def open(self):
+    def open(self) -> None:
         """Open a .obs file."""
         paths_list = filedialog.askopenfilenames(parent=self.master, initialdir=os.getcwd,
                                                  title='Please select a directory', filetypes=[("OBS files", "*.obs")])
@@ -296,19 +298,18 @@ class Files:
             param = new_tl.param.paramlist
             entry_list = new_tl.Files.entry_list
 
-            obs_file = open(newtab_path, "r")
-            temp_entry = []
-            for script_line in obs_file:
-                temp_entry.append((script_line.rsplit("#", 1)[0]).split(" = ", 1))
+            with open(newtab_path, "r") as obs_file:
+                temp_entry = []
+                for script_line in obs_file:
+                    temp_entry.append((script_line.rsplit("#", 1)[0]).split(" = ", 1))
+
             for frame in range(4):
                 for i in range(len(param[frame][1])):
                     j = 0
                     if param[frame][1][i]["name"] == temp_entry[j][0]:
                         if param[frame][1][i]["string"] and not temp_entry[j][1].rstrip() == "{}":
-                            try:
-                                temp_entry_final = temp_entry[j][1].rstrip()[1:-1 - len(param[frame][1][i]["unit"])]
-                            except KeyError:
-                                temp_entry_final = temp_entry[j][1].rstrip()[1:-1]
+                            unit = param[frame][1][i].get("unit", "")
+                            temp_entry_final = temp_entry[j][1].rstrip()[1:-1 -  len(unit)]
                         else:
                             temp_entry_final = temp_entry[j][1].rstrip()
                         if "values" in param[frame][1][i].keys():
@@ -330,46 +331,58 @@ class Files:
                                 entry_list[frame][1][i].set(temp_entry_final)
                                 break
 
-            obs_file.close()
             new_tl.Files.relative_trace_callback(forceconvert=True)
             new_tl.Files.tracers_init()
 
-    def save(self):
+    def save(self) -> None:
         """Output the current entries as an .obs file."""
         filename = filedialog.asksaveasfilename(initialfile=self.master.title(), defaultextension=".obs",
                                                 filetypes=(("OBS file", "*.obs"), ("All Files", "*.*")))
-        obs_file = open(filename, "w")
-        maxlength = len(max(chain.from_iterable(self.paramlist), key=len)) + len(
-            max(chain.from_iterable(self.entry_list), key=len))
+        with open(filename, "w") as obs_file:
+            maxlength = len(max(chain.from_iterable(self.paramlist), key=len)) + len(
+                max(chain.from_iterable(self.entry_list), key=len))
 
-        for frame in range(len(self.paramlist)):
-            obs_file.writelines("[" + self.paramlist[frame][0] + "]")
-            obs_file.writelines('\n')
-            for position in range(len(self.paramlist[frame][1])):
-                param_index = [index for index in range(len(self.paramlist[frame][1])) if
-                               self.paramlist[frame][1][index]["no."] == position + 1][0]
-                if self.paramlist[frame][1][param_index]["string"] and not self.entry_list[frame][1][
-                                                                               param_index].get().lstrip() == "{}":
-                    try:
-                        temp = self.paramlist[frame][1][param_index]["name"] + " = " + '"' + \
-                               self.entry_list[frame][1][param_index].get().lstrip() + \
-                               self.paramlist[frame][1][param_index]["unit"] + '"'
-                    except KeyError:
-                        temp = self.paramlist[frame][1][param_index]["name"] + " = " + '"' + \
-                               self.entry_list[frame][1][param_index].get().lstrip() + '"'
-                else:
-                    temp = self.paramlist[frame][1][param_index]["name"] + " = " + self.entry_list[frame][1][
-                        param_index].get().lstrip()
-
-                obs_file.writelines(temp.ljust(maxlength + 11))
-                obs_file.writelines("# ")
-                obs_file.writelines(self.paramlist[frame][1][param_index]["#"])
+            for frame in range(len(self.paramlist)):
+                obs_file.writelines("[" + self.paramlist[frame][0] + "]")
                 obs_file.writelines('\n')
-            obs_file.writelines('\n')
+                for position in range(len(self.paramlist[frame][1])):
+                    param_index = [index for index in range(len(self.paramlist[frame][1])) if
+                                self.paramlist[frame][1][index]["no."] == position + 1][0]
+                    unit = self.paramlist[frame][1][param_index].get("unit", None)
+                    param_name = self.paramlist[frame][1][param_index]["name"]
+                    value = self.entry_list[frame][1][param_index].get().lstrip()
 
-        obs_file.close()
+                    if value.replace(".", "", 1).isdigit():
+                        # Convert string input to float value
+                        # NaN or Inf aren't considered
+                        value = float(value)
+                    if value and (unit is not None):
+                        try:
+                            value = Angle(value, unit=unit).to_value(unit)
+                        except (ValueError, UnitConversionError, UnitTypeError):
+                            # Ignore non-angular quantities
+                            pass
 
-    def openFITS(self):
+                    if (unit is not None) and isinstance(value, str) and (value not in ["{}", ""]):
+                        # Both unit and numerical value specified
+                        temp = f'"{param_name}[{unit}]" = "{value}"'
+                    elif unit is not None:
+                        # Unit specified, but value is non-numerical or empty
+                        temp = f'"{param_name}[{unit}]" = {value or "{}"}'
+                    elif isinstance(value, str) and (value not in ["{}", "", "true", "false"]):
+                        # Value is string
+                        temp = f'"{param_name}" = "{value}"'
+                    else:
+                        # Value is boolean or empty
+                        temp = f"{param_name} = {value or '{}'}"
+
+                    obs_file.writelines(temp.ljust(maxlength + 11))
+                    obs_file.writelines("# ")
+                    obs_file.writelines(self.paramlist[frame][1][param_index]["#"])
+                    obs_file.writelines('\n')
+                obs_file.writelines('\n')
+
+    def openFITS(self) -> None:
         """Open a FITS file, convert the image bitmap to 8-bit,
         and pass the PIL.Image object to Graphic.fits_initialize.
         """
@@ -451,7 +464,7 @@ class Files:
         self.currentCoords_update(None, forangle=True)
         self.lambet_trace_callback(None)
 
-    def openREG(self):
+    def openREG(self) -> None:
         """Load a pyregion file and draw the boxes on the tkinter.Canvas instance."""
         paths_list = filedialog.askopenfilenames(
             parent=self.master,
@@ -487,7 +500,9 @@ class Files:
             self.grph.setBox(None, REG=(x1, y1, x2, y2, x3, y3, x4, y4), REGdeg=self.sbox.coord_list[4])
             self.grph.canvas.tag_raise("all")
 
-    def REG_rotate(self, x, y, xmid, ymid, deg):
+    def REG_rotate(
+        self, x: float, y: float, xmid: float, ymid: float, deg: float
+    ) -> tuple[float, float]:
         """Rotate the pyregion box.
 
         Parameters
@@ -512,7 +527,7 @@ class Files:
         xy = complex(x - xmid, y - ymid) * cmath.exp(complex(0, -deg * math.pi / 180))
         return xy.real + xmid + reg_offset[0], xy.imag + ymid + reg_offset[1]
 
-    def currentCoords_update(self, _, forangle=False):
+    def currentCoords_update(self, _, forangle: bool = False) -> None:
         """Update the parameters as the box object of Graphic changes.
 
         Parameters
@@ -655,18 +670,18 @@ class Files:
                 pass
         self.tracers_init()
 
-    def setup_cCu(self):
+    def setup_cCu(self) -> None:
         """Search for necessary indices of the paramaters using setup_cCu_iterator, set their initial states,
         and bind currentCoords_update to some mouse motions.
         """
         self.angle_index = self.setup_cCu_iterator("position_angle")
-        self.lambet_index = self.setup_cCu_iterator("LambdaOn")
-        self.startpos_index = self.setup_cCu_iterator("StartPositionX")
-        self.coordsys_index = self.setup_cCu_iterator("COORD_SYS")
-        self.offabs_index = self.setup_cCu_iterator("LambdaOff")
-        self.offrel_index = self.setup_cCu_iterator("deltaLambda")
-        self.relative_index = self.setup_cCu_iterator("RELATIVE")
-        self.scanDirection_index = self.setup_cCu_iterator("SCAN_DIRECTION")
+        self.lambet_index = self.setup_cCu_iterator("lambda_on")
+        self.startpos_index = self.setup_cCu_iterator("start_position_x")
+        self.coordsys_index = self.setup_cCu_iterator("coord_sys")
+        self.offabs_index = self.setup_cCu_iterator("lambda_off")
+        self.offrel_index = self.setup_cCu_iterator("delta_lambda")
+        self.relative_index = self.setup_cCu_iterator("relative")
+        self.scanDirection_index = self.setup_cCu_iterator("scan_direction")
         self.Nspacing_index = self.setup_cCu_iterator("n")
         self.otf_index = self.setup_cCu_iterator("scan_length")
 
@@ -693,7 +708,7 @@ class Files:
         #self.coordsys_trace_callback()
         self.tracers_init()
 
-    def setup_cCu_iterator(self, name):
+    def setup_cCu_iterator(self, name: str) -> None:
         """Search for the indices of a parameter in Parameters.paramlist.
 
         Parameters
@@ -712,7 +727,7 @@ class Files:
             for position in range(len(framelist[0]))
             if self.entry_list[frame][0][position] == name][0]
 
-    def tracers_init(self):
+    def tracers_init(self) -> None:
         """Bind functions to the changes made to the variables."""
         self.tracers = [
             [self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]], lambda t1, t2, t3 : self.coordsys_trace_callback()],
@@ -730,7 +745,7 @@ class Files:
             #variable.trace("w", lambda t1, t2, t3, entry=entry: self.slider_trace_callback(entry))
         #self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]].trace("w", lambda t1, t2, t3:self.coordsys_trace_callback())
 
-    def tracers_disable(self):
+    def tracers_disable(self) -> None:
         """Delete all trace binds."""
         try:
             for i, (var, callback, tracer_id) in enumerate(self.tracers):
@@ -739,7 +754,7 @@ class Files:
         except ValueError:
             pass
 
-    def relative_trace_callback(self, forceconvert=False, *args):
+    def relative_trace_callback(self, forceconvert: bool = False, *args) -> None:
         """Convert between relative and absolute coordiantes for the off position.
 
         Parameters
@@ -815,7 +830,7 @@ class Files:
         self.entry_list[active_index[0]][2][active_index[1]].config(state="normal")
         self.entry_list[active_index[0]][2][active_index[1] + 1].config(state="normal")
 
-    def coordsys_trace_callback(self, *args):
+    def coordsys_trace_callback(self, *args) -> None:
         """Convert coordinate values to the chosen frame."""
         # Record change
         coordsys = self.entry_list[self.coordsys_index[0]][1][self.coordsys_index[1]].get()
@@ -831,8 +846,8 @@ class Files:
         if self.obs_sys[0] is not None and not self.obs_sys[0] == self.obs_sys[-1]:
             lam_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
             bet_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
-            startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get())
-            starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get())
+            startx_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1]].get() or 0)
+            starty_new = float(self.entry_list[self.startpos_index[0]][1][self.startpos_index[1] + 1].get() or 0)
 
             lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[0])
             startpos_new = SkyCoord(
@@ -860,7 +875,9 @@ class Files:
             # Convert off position
             self.relative_trace_callback(forceconvert=True)
 
-    def lambet_trace_callback(self, event=None, disabletracers=False, *args):
+    def lambet_trace_callback(
+        self, event: tk.Event | None = None, disabletracers: bool = False, *args
+    ) -> None:
         """Modify box when the relevant quantities are changed.
 
         Parameters
@@ -960,7 +977,7 @@ class Files:
         except ValueError:
             pass
 
-    def scanDirection_trace_callback(self, *args):
+    def scanDirection_trace_callback(self, *args) -> None:
         """Update scan direction record and change the  position of the small circle."""
         try:
             self.scan_direction.append(
@@ -972,7 +989,7 @@ class Files:
         except AttributeError:
             pass
 
-    def Nspacing_trace_callback(self, *args):
+    def Nspacing_trace_callback(self, *args) -> None:
         """Determine the scan_spacing value.
 
         Parameters
@@ -989,7 +1006,7 @@ class Files:
         self.entry_list[self.Nspacing_index[0]][1][self.Nspacing_index[1]].set(
             math.ceil(start_sc.separation(end_sc).arcsec / scan_spacing))
 
-    def close_tl(self, tl_id):
+    def close_tl(self, tl_id: tk.Toplevel) -> None:
         """Remove top-level window object id from tl_windows. Destroy root if tl_windows is empty.
 
         Parameters
