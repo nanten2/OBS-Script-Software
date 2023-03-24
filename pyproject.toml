@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "obs_p.py"
-version = "1.0.2"
+version = "1.0.3"
 description = "OBS Script Software"
 authors = ["Jeremy"]
 license = "MIT"
