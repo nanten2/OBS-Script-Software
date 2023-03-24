@@ -780,7 +780,7 @@ class Files:
             # Get the current values
             lam_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1]].get())
             bet_new = str(self.entry_list[self.lambet_index[0]][1][self.lambet_index[1] + 1].get())
-            lambet_new = SkyCoord(Angle(lam_new), Angle(bet_new).to(u.hourangle), frame=self.obs_sys[-1])
+            lambet_new = SkyCoord(Angle(lam_new or "0deg"), Angle(bet_new or "0deg").to(u.hourangle), frame=self.obs_sys[-1])
             if not forceconvert:
                 off_point_lam = str(self.entry_list[disable_index[0]][1][disable_index[1]].get())
                 off_point_bet = str(self.entry_list[disable_index[0]][1][disable_index[1] + 1].get())
@@ -795,13 +795,13 @@ class Files:
             # Convert between absolute and relative
             if type(self.obs_sys[sys_index]) is type(Galactic()):
                 off_point_abs = SkyCoord(
-                    Angle(off_point_lam) + offset2 * Angle(lambet_new.l.to_string(u.hour)),
-                    Angle(off_point_bet) + offset2 * Angle(lambet_new.b.to_string(u.degree)),
+                    Angle(off_point_lam or "0deg") + offset2 * Angle(lambet_new.l.to_string(u.hour)),
+                    Angle(off_point_bet or "0deg") + offset2 * Angle(lambet_new.b.to_string(u.degree)),
                     frame=self.obs_sys[sys_index])
             elif type(self.obs_sys[sys_index]) is type(FK5(equinox="J2000")) or type(self.obs_sys[sys_index]) is type(FK4(equinox="B1950")):
                 off_point_abs = SkyCoord(
-                    Angle(off_point_lam) + offset2 * Angle(lambet_new.ra.to_string(u.hour)),
-                    Angle(off_point_bet) + offset2 * Angle(lambet_new.dec.to_string(u.degree)),
+                    Angle(off_point_lam or "0deg") + offset2 * Angle(lambet_new.ra.to_string(u.hour)),
+                    Angle(off_point_bet or "0deg") + offset2 * Angle(lambet_new.dec.to_string(u.degree)),
                     frame=self.obs_sys[sys_index])
             off_point_abs = off_point_abs.transform_to(self.obs_sys[-1])
             lambet_new = lambet_new.transform_to(self.obs_sys[-1])
