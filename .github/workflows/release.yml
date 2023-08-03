@@ -25,6 +25,7 @@ jobs:
           release_name: ${{ github.ref }}
           draft: false
           prerelease: false
+          allowUpdates: true
 
   build:
     name: Compile on ${{ matrix.os }}
