@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+    run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
     steps:
       - name: Create Release
         id: create_release
@@ -27,6 +28,8 @@ jobs:
           draft: false
           prerelease: false
           allowUpdates: true
+      
+
 
   build:
     name: Compile on ${{ matrix.os }}
