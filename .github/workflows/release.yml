@@ -90,7 +90,7 @@ jobs:
           zip -r obs2.zip obs2_${{ matrix.os }}/
       - name: print env
         run: |
-          echo "needs.release.outputs.upload_url"
+          echo "${{ needs.release.outputs.upload_url }}"
 
       - name: Upload Release Asset for MacOS
         if: contains(matrix.os, 'macos')
